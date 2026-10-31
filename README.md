@@ -29,7 +29,8 @@ folder) or publish the folder as-is with GitHub Pages. No build step; the only e
 
 ## Before publishing
 
-- Replace the `data-soon` placeholders (nav "Paper", hero buttons, release grid) with real links; search for `TODO`.
+- Replace the `data-soon` placeholders (nav "Paper"; hero Paper, Code, Model, Benchmark; release grid) with real links; both Paper buttons
+  point to the arXiv abstract page. Search for `TODO`.
 - Update the BibTeX entry in `index.html` once there is an arXiv id or venue.
 - If numbers change in the paper, change them in `assets/js/data.js` / `assets/js/cases.js` and in the matching
   sentences of `index.html` (the copy quotes several of them). If a paper figure changes, re-render it into
