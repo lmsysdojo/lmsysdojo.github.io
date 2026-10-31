@@ -1,0 +1,494 @@
+/* LMSysDojo project page: the LMSysDojo pipeline animation in #dojo (assets/js/dojo-pipeline.js).
+ * The paper figure's three bands in CSS grid (constructor | playgrounds | evaluation, one column template shared by all
+ * three so the arrows between bands run straight), a step rail and caption above, and an SVG overlay for the arrows.
+ * Colours follow the figure: dark gray GuideLLM boxes, the blue reference, the black normalized-gain block, violet for
+ * measurement. At 900 px and below the bands dissolve and the stage shows one beat's blocks at a time. */
+#dojo .dp {
+  --dp-box: #4D4D4D;                        /* the figure's GuideLLM, Baseline & Profiles and Scorer boxes */
+  --dp-gray: #4D4D4D;                       /* its gray arrows */
+  --dp-merge: #8250DF; --dp-close: #CF222E; /* GitHub's merged and closed PR marks */
+  --dp-tex: color-mix(in srgb, var(--ink) 17%, transparent);    /* text drawn as texture */
+  --dp-skel: color-mix(in srgb, var(--ink) 7%, transparent);    /* texture not written yet */
+  --dp-sand: #EEF0F3;                       /* the interaction sandbox's panel inside the blue band */
+  --dp-math: "Times New Roman", Georgia, serif;
+}
+:root[data-theme="dark"] #dojo .dp {
+  --dp-box: #353B46; --dp-gray: #8D94A0; --dp-merge: #A371F7; --dp-close: #F85149;
+  --dp-sand: #1A2230;
+}
+#dojo .dp-root { position: relative; }
+
+/* ------------------------------------------------------------------ header, rail, caption */
+#dojo .dp-top { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; margin-bottom: 14px; }
+#dojo .dp-title { display: flex; align-items: center; gap: 12px; margin: 0; font-size: 15px; font-weight: 600; color: var(--ink); }
+#dojo .dp-title .tag-note { font-size: 11px; }
+#dojo .dp-play {
+  flex: none; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--ink-2);
+  display: inline-grid; place-items: center; cursor: pointer; transition: color .2s, border-color .2s;
+}
+#dojo .dp-play:hover { color: var(--ink); border-color: var(--line-2); }
+#dojo .dp-play svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+#dojo .dp-play .i-play { display: none; fill: currentColor; stroke-width: 1.2; }
+#dojo .dp-play.is-paused .i-play { display: block; }
+#dojo .dp-play.is-paused .i-pause { display: none; }
+
+/* eight steps under the figure's three band names */
+#dojo .dp-rail { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); column-gap: 4px; row-gap: 4px; margin: 0 0 12px; }
+#dojo .dp-rk {
+  grid-row: 1; min-width: 0; margin: 0 6px; padding: 0 2px 5px; border-bottom: 1px solid var(--line-2);
+  font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color .3s var(--ease), border-color .3s var(--ease);
+}
+#dojo .dp-rk.is-on { color: var(--blue-ink); border-color: var(--blue-3); }
+#dojo .dp-step {
+  grid-row: 2; position: relative; display: flex; align-items: center; gap: 8px; min-width: 0; padding: 7px 8px 11px;
+  border: 0; border-radius: 12px; background: none; cursor: pointer; text-align: left; color: var(--ink-3);
+  font-size: 13.5px; font-weight: 520; line-height: 1.2; transition: color .25s var(--ease), background-color .25s var(--ease);
+}
+#dojo .dp-step:hover { color: var(--ink); }
+#dojo .dp-step .nb { background: var(--bg); color: var(--ink-3); box-shadow: inset 0 0 0 1px var(--line-2); transition: background-color .3s var(--ease), color .3s var(--ease), box-shadow .3s; }
+#dojo .dp-step.is-done .nb { color: var(--blue-ink); box-shadow: inset 0 0 0 1px var(--blue-3); }
+#dojo .dp-step.is-cur { color: var(--ink); background: var(--panel); }
+#dojo .dp-step.is-cur .nb { background: var(--blue-fill); color: var(--on-blue); box-shadow: none; }
+#dojo .dp-sn { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#dojo .dp-sp { position: absolute; left: 8px; right: 8px; bottom: 4px; height: 2px; border-radius: 2px; background: var(--line); overflow: hidden; opacity: 0; transition: opacity .3s; }
+#dojo .dp-sp i { position: absolute; inset: 0; background: var(--blue); transform-origin: 0 50%; transform: scaleX(0); }
+#dojo .dp-step.is-cur .dp-sp { opacity: 1; }
+
+/* every caption shares one grid cell, so the tallest sets the height and the stage never jumps */
+#dojo .dp-caps { display: grid; margin: 0 0 16px; }
+#dojo .dp-cap {
+  grid-area: 1 / 1; margin: 0; font-size: 15px; line-height: 1.55; color: var(--ink-2); text-wrap: pretty;
+  opacity: 0; visibility: hidden; transition: opacity .3s var(--ease), visibility 0s linear .3s;
+}
+#dojo .dp-cap.is-on { opacity: 1; visibility: visible; transition: opacity .45s var(--ease) .05s, visibility 0s; }
+#dojo .dp-cap b { color: var(--ink); font-weight: 620; }
+#dojo .dp-cap code { font-size: .84em; }
+#dojo .dp-cap-k { margin-right: 10px; font-family: var(--mono); font-size: 11.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--blue-ink); white-space: nowrap; }
+
+/* ------------------------------------------------------------------ stage: three bands, one column template */
+#dojo .dp-stage { position: relative; display: grid; gap: 14px; isolation: isolate; font-size: 13px; line-height: 1.35; color: var(--ink); }
+#dojo .dp-wires { position: absolute; left: 0; top: 0; z-index: 3; pointer-events: none; overflow: visible; }
+#dojo .dp-band {
+  position: relative; display: grid; grid-template-columns: minmax(0, 27fr) minmax(0, 35fr) minmax(0, 38fr);
+  column-gap: 30px; padding: 12px 26px 12px 16px; border-radius: var(--rad-lg);   /* the right padding is the lane for R's wire */
+}
+#dojo .dp-blk { position: relative; min-width: 0; }
+/* the blocks of the current beat get a soft blue ring */
+#dojo .dp-blk::after {
+  content: ""; position: absolute; inset: -5px; z-index: 2; border-radius: 20px; pointer-events: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--blue) 42%, transparent); opacity: 0; transition: opacity .45s var(--ease);
+}
+#dojo .dp-blk.is-act::after { opacity: 1; }
+#dojo .dp-bt { display: none; }
+
+/* band 1: the playground constructor */
+#dojo .dp-b1 { background: var(--panel); grid-template-rows: auto auto auto; row-gap: 8px; padding-bottom: 10px; }
+#dojo .dp-ct { grid-row: 1; margin: 0; text-align: center; font-size: 15.5px; font-weight: 650; letter-spacing: -.01em; color: var(--ink); white-space: nowrap; }
+#dojo .dp-ct1 { grid-column: 1; }
+#dojo .dp-ct2 { grid-column: 2; }
+#dojo .dp-ct3 { grid-column: 3; }
+#dojo .dp-scan { grid-column: 1; grid-row: 2; display: flex; flex-direction: column; }
+#dojo .dp-segp { grid-column: 2; grid-row: 2 / 4; display: flex; flex-direction: column; gap: 12px; padding: 10px 12px; border-radius: 18px; background: var(--bg); }
+#dojo .dp-measc { grid-column: 3; grid-row: 2 / 4; display: flex; flex-direction: column; gap: 14px; }
+#dojo .dp-filesp { flex: 1; display: flex; padding: 10px 10px 8px; border-radius: 18px; background: var(--bg); }
+#dojo .dp-filesb { flex: 1; display: flex; }
+#dojo .dp-bn { grid-column: 1; grid-row: 3; align-self: end; margin: 0; padding-left: 4px; font-size: 17px; font-weight: 650; font-style: italic; letter-spacing: -.01em; color: var(--ink-3); white-space: nowrap; }
+#dojo .dp-bn.is-blue { color: var(--blue-ink); }
+
+/* 1. the PR list (GitHub's list, as in the figure's screenshot) */
+#dojo .dp-gh { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: var(--bg); }
+#dojo .dp-gh-top {
+  display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--line);
+  font-family: var(--mono); font-size: 12.5px; font-weight: 700; color: var(--ink); white-space: nowrap;
+}
+#dojo .dp-logo { display: inline-block; flex: none; overflow: hidden; font-size: 14px; line-height: 0; }
+#dojo .dp-logo img { display: block; max-width: none; }
+:root[data-theme="dark"] #dojo .dp-logo img { filter: invert(1) hue-rotate(180deg) saturate(1.3); }
+#dojo .dp-gh-and { font-weight: 600; }
+#dojo .dp-gh-n { margin: 0; padding: 6px 12px 7px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#dojo .dp-gh-n b { color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+#dojo .dp-gh-view { position: relative; flex: 1; min-height: 188px; overflow: hidden; contain: size; }   /* the list never sets the band's height */
+#dojo .dp-prs { position: relative; margin: 0; padding: 0; list-style: none; }
+#dojo .dp-pr { position: relative; z-index: 1; display: flex; align-items: flex-start; gap: 8px; height: 47px; padding: 7px 12px 0; border-bottom: 1px solid var(--line); }
+#dojo .dp-pr-ic { flex: none; width: 15px; height: 15px; margin-top: 1.5px; fill: none; stroke-width: 1.5; stroke-linecap: round; transition: opacity .3s; }
+#dojo .dp-pr-ic.is-m { stroke: var(--dp-merge); }
+#dojo .dp-pr-ic.is-c { stroke: var(--dp-close); }
+#dojo .dp-pr-b { flex: 1; min-width: 0; }
+#dojo .dp-pr-t { margin: 0; font-size: 12.5px; font-weight: 560; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity .3s; }
+#dojo .dp-pr-m { display: flex; align-items: center; gap: 5px; margin: 3px 0 0; font-size: 11px; color: var(--ink-3); white-space: nowrap; overflow: hidden; }
+#dojo .dp-pr-n { flex: none; transition: opacity .3s; }
+#dojo .dp-lab { flex: none; padding: 0 6px; border-radius: 999px; font-size: 11px; font-weight: 600; line-height: 15px; color: #fff; background: var(--lc, #888); transition: opacity .3s; }
+#dojo .dp-lab.is-red { --lc: #D73A4A; }
+#dojo .dp-lab.is-olive { --lc: #A08A1E; }
+#dojo .dp-lab.is-green { --lc: #5A9A00; }
+#dojo .dp-lab.is-wine { --lc: #8E1F2F; }
+#dojo .dp-lab.is-pink { --lc: #B95FCF; }
+#dojo .dp-lab.is-brown { --lc: #6F4A3A; }
+#dojo .dp-lab.is-blue { --lc: #1F7FE5; }
+#dojo .dp-lab.is-violet { --lc: #A24BE0; }
+#dojo .dp-pr-m { position: relative; }
+#dojo .dp-why {
+  position: absolute; right: 0; top: 0; padding: 0 7px; border: 1px dashed var(--ink-4); border-radius: 999px; background: var(--bg);
+  font-family: var(--mono); font-size: 11px; line-height: 15px; color: var(--ink-3); opacity: 0; transition: opacity .3s;
+}
+#dojo .dp-pr.is-skip .dp-pr-t, #dojo .dp-pr.is-skip .dp-pr-n, #dojo .dp-pr.is-skip .dp-pr-ic { opacity: .35; }
+#dojo .dp-pr.is-skip .dp-lab { opacity: 0; }
+#dojo .dp-pr.is-skip .dp-why { opacity: 1; }
+#dojo .dp-why::before { content: ""; position: absolute; right: 100%; top: -1px; bottom: -1px; width: 18px; background: linear-gradient(90deg, transparent, var(--bg)); }
+#dojo .dp-cur { position: absolute; left: 0; right: 0; top: 0; z-index: 0; border-left: 3px solid var(--blue); background: color-mix(in srgb, var(--blue) 9%, transparent); pointer-events: none; opacity: 0; }
+#dojo .dp-pick {
+  position: absolute; inset: 2px 4px 3px; border: 2.5px solid var(--block); border-radius: 10px; pointer-events: none;
+  opacity: 0; transform: scale(1.05); transition: opacity .35s var(--ease), transform .55s var(--ease-out);
+}
+#dojo .dp-pr.is-kept .dp-pick { opacity: 1; transform: none; }
+#dojo .dp-pick-k {
+  position: absolute; right: 8px; top: -12px; padding: 1px 8px; border-radius: 999px; background: var(--block); color: var(--on-block);
+  font-family: var(--mono); font-size: 11px; font-weight: 700; line-height: 17px; white-space: nowrap;
+}
+
+/* 2. the PR's commits: baseline = the parent, reference = the landed commit */
+#dojo .dp-cm { font-size: 12px; container-type: inline-size; }
+#dojo .dp-cm-tabs { display: flex; gap: 14px; padding: 0 2px 6px; border-bottom: 1px solid var(--line); font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; }
+#dojo .dp-cm-tabs .is-on { color: var(--ink); font-weight: 600; text-decoration: underline 2px; text-decoration-color: var(--orange); text-underline-offset: 8px; }
+#dojo .dp-cm-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; column-gap: 8px; min-height: 27px; }
+#dojo .dp-cm-par { padding: 3px 2px; }
+#dojo .dp-cm-list { margin: 0; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: 10px; }
+#dojo .dp-cm-list > li { padding: 3px 8px; border-bottom: 1px solid var(--line); }
+#dojo .dp-cm-list > li:last-child { border-bottom: 0; }
+#dojo .dp-cm-row:not(.dp-cm-par):not(.dp-cm-ref) { grid-template-columns: minmax(0, 1fr) auto; }
+#dojo .dp-cm-lead { display: grid; min-width: 0; }
+#dojo .dp-cm-lead > * { grid-area: 1 / 1; min-width: 0; }
+#dojo .dp-cm-t { color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity .3s; }
+#dojo .dp-cm-sha, #dojo .dp-sha { padding: 1px 6px; border-radius: 6px; background: none; font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); }
+#dojo .dp-sha { color: var(--ink); font-weight: 600; transition: box-shadow .35s var(--ease); }
+#dojo .dp-sha.is-b.is-on { box-shadow: 0 0 0 2px var(--dp-gray); }
+#dojo .dp-sha.is-r.is-on { box-shadow: 0 0 0 2px var(--blue); }
+#dojo .dp-cm-pp { font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); white-space: nowrap; }
+#dojo .dp-ver { padding: 0 6px; border: 1px solid color-mix(in srgb, var(--aqua) 70%, transparent); border-radius: 999px; font-size: 11px; line-height: 15px; color: var(--aqua-ink); }
+#dojo .dp-arm { font-size: 12px; font-weight: 700; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transition: opacity .4s var(--ease); }
+#dojo .dp-arm-p { font-weight: 600; }
+#dojo .dp-arm.is-b { color: var(--dp-gray); }
+#dojo .dp-arm.is-r { color: var(--blue-ink); }
+#dojo .dp-cm-row.is-on .dp-arm { opacity: 1; }
+#dojo .dp-cm-row.is-on .dp-cm-dim { opacity: 0; }
+@container (max-width: 400px) { #dojo .dp-ver { display: none; } }
+@container (max-width: 342px) { #dojo .dp-arm-c { display: none; } }
+@container (max-width: 268px) { #dojo .dp-arm-p { display: none; } }
+
+/* 3. problem and fix sealed, deployment setup parsed */
+#dojo .dp-sealb { flex: 1; display: flex; flex-direction: column; }
+#dojo .dp-docs { flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+#dojo .dp-doc { position: relative; display: flex; flex-direction: column; min-width: 0; margin: 0; }
+#dojo .dp-doc-b {
+  position: relative; flex: 1; display: flex; flex-direction: column; gap: 5px; min-height: 84px; padding: 8px 10px;
+  border: 1px solid var(--line); border-radius: 10px; overflow: hidden; transition: filter .6s var(--ease), opacity .6s var(--ease);
+}
+#dojo .dp-doc-t { margin: 0; font-size: 12px; font-weight: 600; line-height: 1.3; color: var(--ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+#dojo .dp-doc-m { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 11px; color: var(--ink-3); white-space: nowrap; overflow: hidden; }
+#dojo .dp-merged { flex: none; padding: 0 7px; border-radius: 999px; background: var(--dp-merge); color: #fff; font-size: 11px; font-weight: 600; line-height: 16px; }
+#dojo .dp-doc-h { margin: 1px 0 0; font-size: 12px; font-weight: 650; line-height: 1.3; color: var(--ink); }
+#dojo .dp-tl { display: block; flex: none; width: var(--w); height: 5px; border-radius: 3px; background: var(--dp-tex); transition: background-color .35s var(--ease); }
+#dojo .dp-doc-pf.is-sealed .dp-doc-b { filter: blur(1.4px); opacity: .45; }
+#dojo .dp-doc-ds.is-hl .dp-tl.is-hl { background: color-mix(in srgb, var(--blue) 55%, transparent); }
+#dojo .dp-doc figcaption { margin-top: 6px; text-align: center; font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--ink-3); white-space: nowrap; }
+#dojo .dp-doc .dp-cap-ds { color: var(--blue-ink); }
+#dojo .dp-seal {
+  position: absolute; left: 50%; top: calc(50% - 12px); z-index: 1; display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px 4px 9px; border: 2px solid var(--ink-2); border-radius: 999px; background: var(--bg);
+  font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--ink-2); white-space: nowrap;
+  opacity: 0; transform: translate(-50%, -50%) scale(.7); transition: opacity .3s var(--ease), transform .45s cubic-bezier(.34, 1.56, .64, 1);
+}
+#dojo .dp-seal.is-on { opacity: 1; transform: translate(-50%, -50%); }
+#dojo .dp-lock { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+#dojo .dp-lock rect { fill: currentColor; }
+#dojo .dp-shackle { transform: translateY(-3.2px); transition: transform .4s cubic-bezier(.34, 1.56, .64, 1); }
+#dojo .is-shut .dp-shackle { transform: none; }
+
+/* 3b. the parsed files: keys in mono, values as texture */
+#dojo .dp-files { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr); gap: 8px; container-type: inline-size; }
+#dojo .dp-file { display: flex; flex-direction: column; min-width: 0; margin: 0; }
+#dojo .dp-code {
+  flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; padding: 6px 7px; border: 1px solid var(--line); border-radius: 9px;
+  font-family: var(--mono); font-size: 11px; line-height: 1.45; overflow: hidden; transition: border-color .4s var(--ease);
+}
+#dojo .dp-file.is-on .dp-code { border-color: var(--line-2); }
+#dojo .dp-fn { margin: 0 0 2px; font-weight: 700; color: var(--ink-2); white-space: nowrap; overflow: hidden; }
+#dojo .dp-ln { display: flex; align-items: center; gap: 5px; min-width: 0; margin: 0; white-space: nowrap; overflow: hidden; }
+#dojo .dp-fk { flex: none; color: var(--ink-4); transition: color .3s var(--ease); }
+#dojo .dp-fv { flex: none; color: var(--ink-4); transition: color .3s var(--ease); }
+#dojo .dp-ln .dp-tl { width: auto; flex: 0 1 var(--w); min-width: 8px; background: var(--dp-skel); }
+/* too narrow for the file names: the captions under the cards say which file is which */
+@container (max-width: 352px) { #dojo .dp-fn, #dojo .dp-ff { display: none; } }
+#dojo .dp-ln.is-on .dp-fk { color: var(--blue-ink); }
+#dojo .dp-ln.is-on .dp-fv { color: var(--aqua-ink); }
+#dojo .dp-ln.is-on .dp-tl { background: color-mix(in srgb, var(--aqua) 55%, transparent); }
+#dojo .dp-ff { margin: auto 0 0; padding-top: 3px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#dojo .dp-ff.is-2 { margin-top: 0; padding-top: 0; }
+#dojo .dp-file figcaption { margin-top: 6px; text-align: center; font-family: var(--mono); font-size: 12.5px; font-weight: 700; line-height: 1.2; color: var(--ink); }
+#dojo .dp-file figcaption i, #dojo .dp-rr b i { font-family: var(--dp-math); font-size: 1.15em; font-weight: 600; }
+
+/* 4. Measuring & Profiling: GuideLLM runs both arms, then the outputs */
+#dojo .dp-meas { flex: none; }
+#dojo .dp-ms { display: grid; grid-template-columns: minmax(0, 46fr) minmax(0, 54fr); column-gap: 28px; }
+#dojo .dp-gl {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 10px 10px; border-radius: 16px; background: var(--dp-box); color: #fff; transition: box-shadow .4s var(--ease);
+}
+#dojo .dp-gl-word { display: block; width: 84%; max-width: 128px; height: auto; }
+#dojo .dp-gl-mks { display: flex; align-items: center; gap: 12px; }
+#dojo .dp-mk { display: block; width: auto; height: 21px; opacity: .5; transition: opacity .35s var(--ease), transform .35s var(--ease); }
+#dojo .dp-mk.is-on { opacity: 1; }
+#dojo .dp-race { display: grid; gap: 4px; width: 100%; }
+#dojo .dp-race p { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 6px; margin: 0; }
+#dojo .dp-race code { padding: 0; background: none; font-size: 11px; color: rgba(255, 255, 255, .78); }
+#dojo .dp-race-t { position: relative; height: 6px; overflow: hidden; border-radius: 3px; background: rgba(255, 255, 255, .14); }
+#dojo .dp-race-t i { position: absolute; inset: 0; border-radius: inherit; background: #D3D6DD; transform-origin: 0 50%; transform: scaleX(0); }
+#dojo .dp-race .is-r .dp-race-t i { background: #5CA8FF; }
+#dojo .dp-gl.is-run, #dojo .dp-sc.is-run { box-shadow: 0 0 0 2px var(--violet), 0 0 26px -6px var(--violet); }
+#dojo .dp-gpu { display: block; width: 13px; height: 16px; fill: var(--violet); }
+#dojo .dp-gpu .dp-die { fill: #fff; }
+#dojo .dp-gpu-m { position: absolute; right: 9px; top: 9px; opacity: 0; transition: opacity .3s; }
+#dojo .is-run > .dp-gpu-m { opacity: 1; animation: dp-blink 1.1s ease-in-out infinite; }
+@keyframes dp-blink { 50% { opacity: .35; } }
+@keyframes dp-in { from { opacity: 0; transform: translateY(8px); } }
+#dojo .dp-ms-out { display: flex; flex-direction: column; justify-content: center; gap: 16px; min-width: 0; }
+#dojo .dp-bp, #dojo .dp-rr { position: relative; padding: 8px 12px 9px; border-radius: 14px; color: #fff; font-family: var(--mono); transition: box-shadow .4s var(--ease); }
+#dojo .dp-bp { background: var(--dp-box); }
+#dojo .dp-rr { background: var(--blue-fill); }
+#dojo .dp-bp b, #dojo .dp-rr b { display: block; font-size: 12.5px; font-weight: 700; line-height: 1.25; }
+#dojo .dp-bp-l { display: flex; flex-wrap: wrap; gap: 1px 9px; margin-top: 3px; font-size: 11px; line-height: 1.35; color: rgba(255, 255, 255, .38); }
+#dojo .dp-bp-l span { transition: color .3s var(--ease); }
+#dojo .dp-bp-l span.is-on { color: rgba(255, 255, 255, .94); }
+#dojo .dp-rr-r { display: flex; align-items: baseline; gap: 6px; margin-top: 1px; }
+#dojo .dp-rr-r small, #dojo .dp-sc-r small { font-size: 11px; opacity: 0; transition: opacity .3s var(--ease); }
+#dojo .dp-rr.is-on .dp-rr-r small, #dojo .dp-sc.has-v .dp-sc-r small { opacity: .78; }
+#dojo .dp-rr-v { font-family: var(--sans); font-size: 20px; font-weight: 650; line-height: 1.15; font-variant-numeric: tabular-nums; }
+
+/* band 2: the playgrounds */
+#dojo .dp-b2 { align-items: center; padding-top: 2px; padding-bottom: 2px; }
+#dojo .dp-pg-l { grid-column: 1 / 3; min-width: 0; container-type: inline-size; }
+#dojo .dp-pg-k { margin: 0 0 6px 4px; font-style: italic; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#dojo .dp-pg-k b { font-size: 17px; font-weight: 650; letter-spacing: -.01em; }
+#dojo .dp-pg-k span { font-size: 12.5px; }
+#dojo .dp-pg-row { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; margin: 0; padding: 0; list-style: none; }
+#dojo .dp-pg { flex: 1 1 0; display: flex; flex-direction: column; min-width: 0; padding: 8px 11px; border: 1.5px solid var(--line-2); border-radius: 12px; background: var(--bg); }
+#dojo .dp-pg b { font-size: 12.5px; font-weight: 650; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#dojo .dp-pg b em { font-style: normal; color: var(--blue); }
+#dojo .dp-pg span { font-size: 12px; font-style: italic; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#dojo .dp-pg-more { flex: none; font-size: 18px; font-weight: 700; letter-spacing: 1px; color: var(--ink); }
+@container (max-width: 640px) { #dojo .dp-pg-row > .dp-pg:nth-child(3) { display: none; } }
+#dojo .dp-pg-a {
+  grid-column: 3; align-self: end; position: relative; min-height: 76px; justify-content: center; border-color: transparent; background: transparent;
+  transition: border-color .4s var(--ease), background-color .4s var(--ease), box-shadow .4s var(--ease);
+}
+#dojo .dp-pg-a.is-on { border-color: var(--line-2); background: var(--bg); }
+#dojo .dp-pg-a.is-sel { border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue); }
+#dojo .dp-pg-slot {
+  position: absolute; inset: -1.5px; display: grid; place-items: center; border: 1.5px dashed var(--ink-4); border-radius: 12px;
+  font-family: var(--mono); font-size: 11.5px; font-style: normal; color: var(--ink-3); transition: opacity .35s var(--ease);
+}
+#dojo .dp-pg-a.is-on .dp-pg-slot { opacity: 0; }
+#dojo .dp-pg-in { display: flex; flex-direction: column; min-width: 0; opacity: 0; transform: translateY(5px) scale(.98); transition: opacity .4s var(--ease), transform .5s var(--ease-out); }
+#dojo .dp-pg-a.is-on .dp-pg-in { opacity: 1; transform: none; }
+#dojo .dp-pg-items { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; font-style: normal; }
+#dojo .dp-pg-items code {
+  display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px; border-radius: 6px; background: var(--panel); color: var(--ink-2);
+  font-size: 11px; line-height: 16px; opacity: 0; transform: translateY(3px); transition: opacity .3s var(--ease), transform .4s var(--ease-out), background-color .3s;
+}
+#dojo .dp-pg-items code.is-on { opacity: 1; transform: none; }
+#dojo .dp-pg-items .is-lock { background: var(--block); color: var(--on-block); }
+#dojo .dp-pg-items .dp-lock { width: 11px; height: 11px; stroke-width: 2.4; }
+#dojo .dp-pg-sel {
+  position: absolute; right: 12px; top: -11px; padding: 1px 9px; border-radius: 999px; background: var(--blue-fill); color: var(--on-blue);
+  font-family: var(--mono); font-size: 11.5px; font-weight: 700; font-style: normal; line-height: 17px;
+  opacity: 0; transform: translateY(4px) scale(.9); transition: opacity .3s var(--ease), transform .45s cubic-bezier(.34, 1.56, .64, 1);
+}
+#dojo .dp-pg-a.is-sel .dp-pg-sel { opacity: 1; transform: none; }
+
+/* band 3: the evaluation environment, read right to left as in the figure */
+#dojo .dp-b3 { background: var(--panel-blue); grid-template-rows: auto auto; row-gap: 6px; padding-bottom: 10px; }
+#dojo .dp-b3l {
+  grid-column: 1 / 3; grid-row: 1; display: grid; align-items: center; column-gap: 28px;
+  grid-template-columns: minmax(0, 14fr) minmax(0, 14fr) minmax(0, 20fr) minmax(0, 26fr);
+}
+#dojo .dp-b3 .dp-bn { grid-column: 1 / 3; grid-row: 2; }
+#dojo .dp-sb { grid-column: 3; grid-row: 1 / 3; display: flex; flex-direction: column; padding: 10px 10px 6px; border-radius: 18px; background: var(--dp-sand); }
+#dojo .dp-sb-in { flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+#dojo .dp-slurm, #dojo .dp-agent { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-width: 0; padding: 10px 8px; border-radius: 14px; background: var(--bg); }
+#dojo .dp-sl-dots { display: block; width: 56px; height: auto; }
+#dojo .dp-sl-word { display: block; width: 66px; height: 21px; background: var(--ink); -webkit-mask: url(../img/kit/dp-slurm-word.png) center / contain no-repeat; mask: url(../img/kit/dp-slurm-word.png) center / contain no-repeat; }
+#dojo .dp-slurm b { font-family: var(--mono); font-size: 13px; font-weight: 700; line-height: 1.2; }
+#dojo .dp-sl-node { display: inline-flex; align-items: center; gap: 5px; margin-top: 3px; font-family: var(--mono); font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+#dojo .dp-gpu-n { fill: var(--ink-4); transition: fill .35s var(--ease); }
+#dojo .dp-gpu-n.is-on { fill: var(--violet); }
+#dojo .dp-ag-frame { position: absolute; left: 1.5px; top: 1.5px; width: calc(100% - 3px); height: calc(100% - 3px); overflow: visible; fill: none; stroke: var(--blue); stroke-width: 3; stroke-dasharray: 10 7; }
+#dojo .dp-agent.is-work .dp-ag-frame { animation: dp-march .9s linear infinite; }
+#dojo .is-still .dp-agent.is-work .dp-ag-frame, #dojo .is-still .is-run > .dp-gpu-m { animation-play-state: paused; }
+@keyframes dp-march { to { stroke-dashoffset: -17; } }
+#dojo .dp-ag-head { display: block; width: 44px; height: 44px; transition: transform .5s var(--ease); }
+#dojo .dp-agent.is-work .dp-ag-head { transform: scale(1.06); }
+#dojo .dp-agent b { font-family: var(--mono); font-size: 13.5px; font-weight: 700; line-height: 1.2; color: var(--blue-ink); }
+#dojo .dp-budget { display: flex; align-items: center; gap: 6px; width: 84%; margin-top: 2px; }
+#dojo .dp-budget-t { position: relative; flex: 1; height: 4px; overflow: hidden; border-radius: 2px; background: var(--line-2); }
+#dojo .dp-budget-t i { position: absolute; inset: 0; background: var(--blue); transform-origin: 0 50%; transform: scaleX(0); }
+#dojo .dp-budget small { font-family: var(--mono); font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+#dojo .dp-sb-k { margin: 6px 0 0; text-align: center; font-size: 14px; font-weight: 600; color: var(--ink); }
+
+/* the delivery: code diff and artifacts */
+#dojo .dp-df-in { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 10px; border-radius: 16px; background: var(--bg); }
+#dojo .dp-df-c, #dojo .dp-df-a { display: flex; flex-direction: column; min-width: 0; margin: 0; }
+#dojo .dp-df-code, #dojo .dp-df-doc { flex: 1; display: flex; flex-direction: column; gap: 4px; min-height: 100px; padding: 8px 7px; border: 1px solid var(--line); border-radius: 8px; }
+#dojo .dp-dl { display: block; flex: none; width: var(--w); height: 5px; border-radius: 2px; background: var(--dp-skel); transition: background-color .3s var(--ease); }
+#dojo .dp-dl.is-on.is-ctx { background: var(--dp-tex); }
+#dojo .dp-dl.is-on.is-add { background: color-mix(in srgb, var(--aqua) 62%, transparent); }
+#dojo .dp-dl.is-on.is-del { background: color-mix(in srgb, var(--orange) 58%, transparent); }
+#dojo .dp-df-doc .dp-tl { background: var(--dp-skel); }
+#dojo .dp-df-doc .dp-tl.is-on { background: var(--dp-tex); }
+#dojo .dp-df-doc .dp-ah { height: 6px; }
+#dojo .dp-df-doc .dp-ah.is-on { background: color-mix(in srgb, var(--ink) 55%, transparent); }
+#dojo .dp-art-h { margin: 3px 0 0; font-size: 11px; font-weight: 700; line-height: 1.2; color: var(--ink-4); transition: color .3s var(--ease); }
+#dojo .dp-art-h.is-on { color: var(--ink); }
+#dojo .dp-df figcaption { margin-top: 5px; text-align: center; font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+
+/* the validity checkers */
+#dojo .dp-vb { container-type: inline-size; }
+@container (max-width: 150px) { #dojo .dp-v > span:last-child { display: none; } #dojo .dp-v-ic { grid-row: 1; } }
+#dojo .dp-valid { position: relative; display: flex; flex-direction: column; gap: 7px; padding: 10px 11px; border-radius: 16px; background: var(--dp-sand); transition: box-shadow .4s var(--ease); }
+#dojo .dp-valid.is-ok { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--aqua) 70%, transparent); }
+#dojo .dp-valid-h { font-size: 14px; font-weight: 650; line-height: 1.2; text-align: center; }
+#dojo .dp-valid ul { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
+#dojo .dp-v { display: grid; grid-template-columns: 18px minmax(0, 1fr); column-gap: 7px; align-items: start; }
+#dojo .dp-v b { font-size: 12.5px; font-weight: 650; line-height: 18px; }
+#dojo .dp-v > span:last-child { grid-column: 2; font-size: 11px; line-height: 1.3; color: var(--ink-3); }
+#dojo .dp-v-ic { grid-row: 1 / 3; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--line-2); transition: background-color .3s var(--ease), box-shadow .3s var(--ease); }
+#dojo .dp-v.is-run .dp-v-ic { box-shadow: inset 0 0 0 2px var(--blue); animation: dp-blink .8s ease-in-out infinite; }
+#dojo .dp-v.is-ok .dp-v-ic { background: var(--aqua); box-shadow: none; animation: none; }
+#dojo .dp-ck { width: 12px; height: 12px; fill: none; stroke: #fff; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 14; stroke-dashoffset: 14; transition: stroke-dashoffset .35s var(--ease) .08s; }
+#dojo .dp-v.is-ok .dp-ck { stroke-dashoffset: 0; }
+#dojo .dp-pass { align-self: center; padding: 0 9px; border-radius: 999px; background: var(--aqua-bg); color: var(--aqua-ink); font-family: var(--mono); font-size: 11px; font-weight: 700; line-height: 17px; opacity: 0; transition: opacity .35s var(--ease); }
+#dojo .dp-valid.is-ok .dp-pass { opacity: 1; }
+
+/* the scorer and the normalized gain */
+#dojo .dp-sc { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 16px 8px 11px; border-radius: 16px; background: var(--dp-box); color: #fff; transition: box-shadow .4s var(--ease); }
+#dojo .dp-sc .dp-gl-word { width: 88%; max-width: 112px; }
+#dojo .dp-sc b { font-size: 17px; font-weight: 650; line-height: 1.25; }
+#dojo .dp-sc-r { display: flex; align-items: baseline; gap: 4px; font-family: var(--mono); }
+#dojo .dp-sc-v { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+#dojo .dp-ng { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 12px 8px 11px; border-radius: 16px; background: var(--block); color: var(--on-block); text-align: center; }
+#dojo .dp-ng b { font-family: var(--mono); font-size: 13.5px; font-weight: 700; line-height: 1.2; }
+#dojo .dp-ng-v { margin-top: 2px; font-size: 30px; font-weight: 650; line-height: 1.1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+#dojo .dp-ng-f { display: flex; flex-direction: column; align-items: center; margin-top: 3px; font-family: var(--mono); font-size: 11px; line-height: 1.35; white-space: nowrap; opacity: 0; transition: opacity .4s var(--ease); }
+#dojo .dp-ng-f span + span { padding-top: 1px; border-top: 1px solid currentColor; }
+#dojo .dp-ng-f.is-on { opacity: .82; }
+
+/* the figure's arrows: a faint track always, the coloured arrow drawn as its beat comes, a dot riding its head */
+#dojo .dp-wt { fill: none; stroke: color-mix(in srgb, var(--ink) 16%, transparent); stroke-width: 1.4; stroke-dasharray: 2 4; }
+#dojo .dp-wl { fill: none; stroke-width: 2.6; stroke-linejoin: round; opacity: 0; }
+#dojo .dp-wl.is-ink { stroke: var(--ink); }
+#dojo .dp-wl.is-gray { stroke: var(--dp-gray); }
+#dojo .dp-wl.is-blue { stroke: var(--blue); }
+#dojo .dp-wh { opacity: 0; }
+#dojo .dp-wh.is-ink, #dojo .dp-wd.is-ink { fill: var(--ink); }
+#dojo .dp-wh.is-gray, #dojo .dp-wd.is-gray { fill: var(--dp-gray); }
+#dojo .dp-wh.is-blue, #dojo .dp-wd.is-blue { fill: var(--blue); }
+#dojo .dp-wd { opacity: 0; stroke: var(--bg); stroke-width: 2; }
+#dojo .dp-wc { opacity: 0; }
+#dojo .dp-wc circle { fill: var(--blue-fill); stroke: var(--bg); stroke-width: 2; }
+#dojo .dp-wc text { font-family: var(--dp-math); font-size: 13px; font-style: italic; font-weight: 600; fill: #fff; }
+
+/* ------------------------------------------------------------------ medium screens */
+@media (max-width: 1080px) {
+  #dojo .dp-band { column-gap: 26px; padding-left: 12px; padding-right: 24px; }
+  #dojo .dp-ct { font-size: 14.5px; }
+  #dojo .dp-rk { margin: 0 3px; letter-spacing: .06em; }
+  #dojo .dp-step { gap: 6px; padding-left: 4px; padding-right: 4px; font-size: 12.5px; }
+  #dojo .dp-pg-k b { font-size: 16.5px; }
+  #dojo .dp-b3l { column-gap: 24px; }
+  #dojo .dp-ms { column-gap: 24px; }
+  #dojo .dp-gh-pr { display: none; }
+  #dojo .dp-ng b { font-size: 12px; }
+  #dojo .dp-ng-v { font-size: 26px; }
+  #dojo .dp-df figcaption { font-size: 12px; white-space: normal; line-height: 1.2; }
+  #dojo .dp-df-in { gap: 8px; padding: 8px; }
+  #dojo .dp-sb-in { gap: 14px; }
+  #dojo .dp-valid-h { font-size: 13px; }
+}
+
+/* ------------------------------------------------------------------ narrow: one beat's blocks at a time */
+@media (max-width: 900px) {
+  #dojo .dp-rail { column-gap: 2px; }
+  #dojo .dp-stage { display: flex; flex-direction: column; justify-content: center; gap: 0; }
+  #dojo .dp-band:not(.dp-blk), #dojo .dp-segp, #dojo .dp-measc, #dojo .dp-filesp, #dojo .dp-b3l { display: contents; }
+  #dojo .dp-ct, #dojo .dp-bn, #dojo .dp-wires, #dojo .dp-sb-k { display: none; }
+  #dojo .dp-blk { flex: none; display: block; padding: 12px 14px 14px; border-radius: 18px; background: var(--panel); }
+  #dojo .dp-blk:not(.is-on) { display: none; }
+  #dojo .dp-root:not(.is-static) .dp-blk.is-on { animation: dp-in .5s var(--ease-out) both; }
+  #dojo .dp-root:not(.is-static) .dp-blk.is-2nd { animation-delay: .12s; }
+  #dojo .dp-blk::after { display: none; }
+  #dojo .dp-blk.is-2nd { margin-top: 30px; }
+  /* the arrow between the two blocks of one beat */
+  #dojo .dp-blk.is-2nd::before {
+    content: ""; position: absolute; left: 50%; top: -24px; width: 12px; height: 18px; margin-left: -6px;
+    background: var(--ink); clip-path: polygon(4.5px 0, 7.5px 0, 7.5px 10px, 12px 10px, 6px 18px, 0 10px, 4.5px 10px);
+  }
+  #dojo .dp-bt { display: block; margin: 0 0 9px; font-size: 14px; font-weight: 650; color: var(--ink); }
+  #dojo [data-blk="scan"] { order: 1; }
+  #dojo [data-blk="commits"] { order: 2; }
+  #dojo [data-blk="seal"] { order: 3; }
+  #dojo [data-blk="files"] { order: 4; }
+  #dojo [data-blk="measure"] { order: 5; }
+  #dojo [data-blk="play"] { order: 6; }
+  #dojo [data-blk="sandbox"] { order: 7; }
+  #dojo [data-blk="diff"] { order: 8; }
+  #dojo [data-blk="valid"] { order: 9; }
+  #dojo [data-blk="scorer"] { order: 10; }
+  #dojo [data-blk="gain"] { order: 11; }
+  #dojo .dp-commits, #dojo .dp-sealb, #dojo .dp-filesb { background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); }
+  #dojo .dp-sb, #dojo .dp-df, #dojo .dp-vb, #dojo .dp-scb, #dojo .dp-ngb { background: var(--panel-blue); }
+  #dojo .dp-sb { padding: 12px 14px 14px; }
+  #dojo .dp-gh-view { min-height: 0; height: 236px; flex: none; }
+  /* the playgrounds stack, the new one last */
+  #dojo .dp-b2 { padding: 12px 14px 14px; border-radius: 18px; background: var(--panel); }
+  #dojo .dp-pg-l { display: block; }
+  #dojo .dp-pg-k { margin: 0 0 10px; white-space: normal; }
+  #dojo .dp-pg-k b { font-size: 14px; font-style: normal; color: var(--ink); }
+  #dojo .dp-pg-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  #dojo .dp-pg-row > .dp-pg:nth-child(3) { display: flex; }
+  #dojo .dp-pg-more { display: none; }
+  #dojo .dp-pg-a { margin-top: 18px; }
+  #dojo .dp-valid { background: var(--bg); }
+  #dojo .dp-valid-h { display: none; }
+  #dojo .dp-sc, #dojo .dp-ng { padding-top: 14px; padding-bottom: 14px; }
+  /* still frames (reduced motion, ?reveal=all) list every block in order */
+  #dojo .is-static .dp-stage { gap: 12px; }
+}
+@media (max-width: 760px) {
+  #dojo .dp-top { margin-bottom: 12px; }
+  #dojo .dp-rk { display: none; }
+  #dojo .dp-rail { grid-template-rows: auto; margin-bottom: 10px; }
+  #dojo .dp-step { grid-row: 1; justify-content: center; padding: 6px 0 10px; }
+  #dojo .dp-sn { display: none; }
+  #dojo .dp-sp { left: 6px; right: 6px; }
+  #dojo .dp-cap { font-size: 14.5px; }
+  #dojo .dp-pg-row { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  #dojo .dp-title { font-size: 14px; gap: 10px; }
+  #dojo .dp-blk, #dojo .dp-b2, #dojo .dp-sb { padding-left: 11px; padding-right: 11px; }
+  #dojo .dp-docs, #dojo .dp-files { gap: 7px; }
+  #dojo .dp-sb-in { gap: 10px; }
+  #dojo .dp-ms { column-gap: 14px; }
+  #dojo .dp-gh-top { padding: 8px 10px; gap: 5px; }
+  #dojo .dp-pr { padding-left: 10px; padding-right: 10px; }
+}
+@media print {
+  #dojo .dp-play, #dojo .dp-wd, #dojo .dp-wc { display: none; }
+  #dojo .dp-stage { min-height: 0 !important; opacity: 1 !important; }
+  #dojo .dp-blk::after, #dojo .dp-blk::before { display: none !important; }
+}
+/* printed narrow pages list every block, as the still frame does */
+@media print and (max-width: 900px) {
+  #dojo .dp-blk:not(.is-on) { display: block !important; }
+  #dojo .dp-blk + .dp-blk, #dojo .dp-blk.is-2nd { margin-top: 12px; }
+}

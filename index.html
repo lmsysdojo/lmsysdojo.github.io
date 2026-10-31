@@ -26,7 +26,10 @@
 <link rel="stylesheet" href="assets/css/story.css">
 <link rel="stylesheet" href="assets/css/pillars.css">
 <link rel="stylesheet" href="assets/css/dojo.css">
+<link rel="stylesheet" href="assets/css/dojo-pipeline.css">
 <link rel="stylesheet" href="assets/css/gap.css">
+<link rel="stylesheet" href="assets/css/gap-glance.css">
+<link rel="stylesheet" href="assets/css/papers.css">
 <link rel="stylesheet" href="assets/css/rl.css">
 <link rel="stylesheet" href="assets/css/gallery.css">
 </head>
@@ -197,12 +200,15 @@
     </div>
 
     <figure class="fig" style="margin-top:56px" data-reveal>
+      <div class="dp" data-mount="dojo-pipeline">
       <div class="fig-frame">
         <img src="assets/img/fig/teaser-2400.webp" srcset="assets/img/fig/teaser-1200.webp 1200w, assets/img/fig/teaser-2400.webp 2400w" sizes="(max-width: 1240px) 100vw, 1180px" width="2400" height="1194" loading="lazy" decoding="async" data-zoom data-zoom-src="assets/img/fig/teaser-2400.webp" alt="The LMSysDojo pipeline: a playground constructor scans, segments, parses, measures and profiles merged PRs; each PR becomes a playground whose problem and fix stay sealed; an evaluation environment runs the agent in a sandbox on a Slurm GPU node, checks validity, and scores its normalized gain.">
         <button class="zoom-btn" type="button" data-zoom-src="assets/img/fig/teaser-2400.webp" data-zoom-alt="The LMSysDojo pipeline">Zoom ⤢</button>
       </div>
-      <figcaption><b>The LMSysDojo pipeline.</b> Top: the playground constructor scans the merged PRs of vLLM and SGLang, segments each performance PR into the commits before and after the expert's patch, parses only its deployment setup into a setup card, an engine configuration and a GuideLLM workload, then measures the expert's speedup and profiles the baseline on your hardware. Middle: each PR becomes a playground; its problem statement and fix stay sealed. Bottom: the evaluation environment runs the agent in an interaction sandbox on a Slurm-allocated GPU node, checks its delivery, and scores its normalized gain.</figcaption>
+      </div>
+      <figcaption><b>The LMSysDojo pipeline, followed for one performance PR.</b> Top: the playground constructor scans the merged PRs of vLLM and SGLang, segments each performance PR into the commits before and after the expert's patch, parses only its deployment setup into a setup card, an engine configuration and a GuideLLM workload, then measures the expert's speedup and profiles the baseline on the target hardware. Middle: each PR becomes a playground; its problem statement and fix stay sealed. Bottom: the evaluation environment runs the agent in an interaction sandbox on a Slurm-allocated GPU node, checks its delivery, and scores its normalized gain. The speedups shown are Fig. 1's example.</figcaption>
     </figure>
+    <p class="paper-figs" data-reveal>Paper figure: <a class="paper-fig" href="assets/img/fig/teaser-2400.webp" target="_blank" rel="noopener" data-zoom-src="assets/img/fig/teaser-2400.webp" data-zoom-alt="The LMSysDojo pipeline (paper figure)">The LMSysDojo pipeline ↗</a></p>
 
     <h3 class="sub" data-reveal>Scored against the expert</h3>
     <div class="split dojo-gain" data-reveal>
@@ -275,17 +281,20 @@
   <div class="wrap">
     <div class="sec-head" data-reveal>
       <h2 id="gap-title"><span class="sec-no">02 · Agent</span>Gap analysis: predict the gain before&nbsp;building&nbsp;it</h2>
-      <p class="lede">A single Claude Code agent on Opus 5 reaches 57% and 60% of the expert's gain on the two held-out splits. In one session it entangles diagnosis with implementation, committing early to one hypothesis with no quantitative way to compare alternatives before its single measurement. Systems researchers argue differently: across 50 recent LLM serving papers, the justification follows one structure.</p>
+      <p class="lede">A single Claude Code agent on Opus 5 reaches 57% and 60% of the expert's gain on the two held-out splits. In one session it entangles diagnosis with implementation, committing early to one hypothesis with no quantitative way to compare alternatives before its single measurement. Systems researchers argue differently: across 50 recent LLM serving papers, the justification follows one structure. <button class="lib-open" type="button" data-papers-open hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c2.6-1.1 5.6-1 9 1 3.4-2 6.4-2.1 9-1v13c-2.6-1.1-5.6-1-9 1-3.4-2-6.4-2.1-9-1z"/><path d="M12 6.5v13"/></svg>Browse the 50 papers</button></p>
     </div>
     <blockquote class="insight" data-reveal><b>Locate the gap, find a fix, predict the gain.</b> Inspect the profiles to locate where the deployment loses performance; design a mechanism that removes wasted work or spends a resource with headroom to relieve the bottleneck; and predict the mechanism's gain from measured profile quantities, experimental evidence and stated assumptions, independently of how the code is implemented.</blockquote>
 
     <figure class="fig" style="margin-top:48px" data-reveal>
+      <div class="gg" data-mount="gap-glance">
       <div class="fig-frame">
         <img src="assets/img/fig/main-2400.webp" srcset="assets/img/fig/main-1200.webp 1200w, assets/img/fig/main-2400.webp 2400w" sizes="(max-width: 1240px) 100vw, 1180px" width="2400" height="692" loading="lazy" decoding="async" data-zoom data-zoom-src="assets/img/fig/main-2400.webp" alt="LMSysDojo and gap analysis at a glance: diverse real-world setups as playgrounds; parallel analyzers each predict a gain and only the highest-predicted mechanism is implemented; the patch is scored by normalized gain against the expert.">
         <button class="zoom-btn" type="button" data-zoom-src="assets/img/fig/main-2400.webp" data-zoom-alt="LMSysDojo and gap analysis at a glance">Zoom ⤢</button>
       </div>
-      <figcaption><b>At a glance.</b> Left: real serving setups rebuilt from merged PRs serve as playgrounds. Middle: parallel gap analysis runs independent analyzers; each locates a gap, proposes a mechanism and predicts its gain, and only the highest-predicted mechanism is implemented. Right: the patch is scored by its normalized gain against the expert's fix on the same setup.</figcaption>
+      </div>
+      <figcaption><b>At a glance.</b> (1) Real serving setups rebuilt from merged PRs serve as playgrounds. (2) Parallel gap analysis runs independent analyzers; each locates a gap, proposes a mechanism and predicts its gain, and only the highest-predicted mechanism is implemented. (3) The patch is scored by its normalized gain against the expert's fix on the same setup.</figcaption>
     </figure>
+    <p class="paper-figs" data-reveal>Paper figure: <a class="paper-fig" href="assets/img/fig/main-2400.webp" target="_blank" rel="noopener" data-zoom-src="assets/img/fig/main-2400.webp" data-zoom-alt="LMSysDojo and gap analysis at a glance (paper figure)">At a glance ↗</a></p>
 
     <h3 class="sub" data-reveal>Why focus on the analysis</h3>
     <div class="split" data-reveal>
@@ -477,7 +486,11 @@
 <script src="assets/js/story.js" defer></script>
 <script src="assets/js/pillars.js" defer></script>
 <script src="assets/js/dojo.js" defer></script>
+<script src="assets/js/dojo-pipeline.js" defer></script>
 <script src="assets/js/gap.js" defer></script>
+<script src="assets/js/gap-glance.js" defer></script>
+<script src="assets/js/papers-data.js" defer></script>
+<script src="assets/js/papers.js" defer></script>
 <script src="assets/js/rl.js" defer></script>
 <script src="assets/js/gallery.js" defer></script>
 </body>

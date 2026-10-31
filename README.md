@@ -18,10 +18,14 @@ folder) or publish the folder as-is with GitHub Pages. No build step; the only e
 | `assets/{js,css}/story.*` | "Watch an agent find a gap": the pinned, scroll-driven vLLM 4696 walkthrough. |
 | `assets/{js,css}/pillars.*` | Overview of the three pillars and the loop between them. |
 | `assets/{js,css}/dojo.*` | 01 Environment: normalized-gain calculator, census funnel, composition, sealed sandbox. |
+| `assets/{js,css}/dojo-pipeline.*` | 01 Environment: the LMSysDojo pipeline figure as an animation (one PR from scan to playground to a scored patch). |
 | `assets/{js,css}/gap.*` | 02 Agent: variance, parallel K demo, provenance viewer, iterative checks, results, K = 50 scaling. |
+| `assets/{js,css}/papers.*`, `assets/js/papers-data.js` | 02 Agent: the 50-paper library behind the gap section's lede (a dialog, opened on request). The data is generated from the paper's Appendix G table by `asset/source/site-papers.py`. |
+| `assets/{js,css}/gap-glance.*` | 02 Agent: the "At a glance" figure as an animation (setups, parallel gap analysis, candidate mechanisms against the expert). |
 | `assets/{js,css}/rl.*` | 03 Training: signal comparison, the three-challenge loop animation (whole solver vs analysis RL, fixed vs elastic GPU fleet, synchronous vs asynchronous), throughput, RL results. |
 | `assets/{js,css}/gallery.*` | 04 Gallery: a walkthrough player for the paper's two end-to-end deliveries (SGLang 8940, vLLM 41868), the mechanism cards, failure modes. |
 | `assets/img/fig`, `assets/img/chart` | Paper figures (WebP, 1200 and 2400 px) and the paper's own charts, opened by the "Paper figure ↗" buttons next to each interactive version. |
+| `assets/img/kit` | Logos and marks the animations reuse from the paper's figure sources (engine logos, model marks, analyzer head). |
 
 ## Before publishing
 

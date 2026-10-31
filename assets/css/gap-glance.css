@@ -1,0 +1,315 @@
+/* LMSysDojo project page: the "At a glance" animation in #gap (assets/js/gap-glance.js). Fig. 1's three panels in its
+ * own language: a gray panel of white setup cards, the dashed blue agent region with gray analysis cards over white gain
+ * chips and the black Implement block, and the pale blue candidate board with the expert row and the black formula.
+ * Colours are base.css tokens or Fig. 1's own inks with dark overrides, so both themes work without a redraw.
+ * gap-glance.js writes custom properties (--a activation, --sel, --dim, --p progress) plus transform, opacity,
+ * clip-path and stroke-dashoffset on the moving marks; everything else is here.
+ * Three columns from 1081px; below that the panels stack and the arrows between them turn downward. */
+
+#gap .gg {
+  --gg-card: var(--bg);
+  --gg-pale: #80BFFF;                                         /* Fig. 1's light-blue marks (the theme blue at half strength) */
+  --gg-bell: #C0DDF9;                                         /* its pale bell fill */
+  --gg-line: var(--ink-2);                                    /* baselines and the agent's wires (Fig. 1: #4D4D4D) */
+  --gg-pred: #8D9099;                                         /* gray prediction bars */
+  --gg-track: var(--line);
+  --gg-llm: #444444;                                          /* the vLLM wordmark's gray */
+  --gg-on-block-blue: #80BFFF;                                /* blue words on the black formula block */
+  --gg-dim: .32;                                              /* opacity of a mark whose stage has not come yet */
+}
+:root[data-theme="dark"] #gap .gg {
+  --gg-pale: color-mix(in srgb, var(--blue) 64%, var(--panel));   /* the same marks, mixed toward the dark panel */
+  --gg-bell: color-mix(in srgb, var(--blue) 30%, var(--panel));
+  --gg-pred: #646B78;
+  --gg-track: var(--line-2);
+  --gg-llm: var(--ink-2);
+  --gg-on-block-blue: #0066D6;                                /* the light theme's small-text blue: 4.9:1 on the light block */
+}
+
+/* ------------------------------------------------------------------ frame: title, pause button */
+#gap .gg .gg-top { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; margin-bottom: 12px; }
+#gap .gg .gg-title .tag-note { font-size: 11px; }
+#gap .gg .gg-title { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; min-width: 0; margin: 0; font-size: 15px; font-weight: 600; line-height: 1.35; color: var(--ink); }
+#gap .gg .gg-play {
+  flex: none; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--ink-2);
+  display: inline-grid; place-items: center; cursor: pointer; transition: color .2s, border-color .2s;
+}
+#gap .gg .gg-play[hidden] { display: none; }
+#gap .gg .gg-play:hover { color: var(--ink); border-color: var(--line-2); }
+#gap .gg .gg-play:focus-visible { border-radius: 50%; }
+#gap .gg .gg-play svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+#gap .gg .gg-play .i-play { display: none; fill: currentColor; stroke-width: 1.2; }
+#gap .gg .gg-play.is-paused .i-play { display: block; }
+#gap .gg .gg-play.is-paused .i-pause { display: none; }
+
+/* ------------------------------------------------------------------ the stage: three panels, two arrows */
+#gap .gg .gg-stage {
+  position: relative; display: grid; align-items: stretch;
+  grid-template-columns: minmax(0, 1.12fr) 40px minmax(0, 1fr) 40px minmax(0, 1fr);
+}
+#gap .gg .gg-panel { position: relative; display: flex; flex-direction: column; min-width: 0; padding: 14px 12px 12px; border-radius: var(--rad-lg); }
+#gap .gg .gg-p1 { background: var(--panel); }
+#gap .gg .gg-p2 { border: 2px dashed color-mix(in srgb, var(--blue) 80%, transparent); padding: 12px 10px 10px; }
+#gap .gg .gg-p3 { background: var(--panel-blue); }
+#gap .gg .gg-ph { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 15px; font-weight: 600; line-height: 1.3; letter-spacing: -.01em; color: var(--ink-3); transition: color .4s var(--ease); }
+#gap .gg .gg-ph .nb { width: 20px; height: 20px; font-size: 11px; background: var(--ink-4); transition: background-color .4s var(--ease); }
+#gap .gg .gg-ph em { font-style: normal; color: inherit; transition: color .4s var(--ease); }
+#gap .gg .gg-panel.is-on .gg-ph { color: var(--ink); }
+#gap .gg .gg-panel.is-on .gg-ph .nb { background: var(--blue-fill); }
+#gap .gg .gg-panel.is-on .gg-ph em { color: var(--blue-ink); }
+
+/* what the panel is doing: every line sits in one grid cell, so the cell keeps the height of the longest. The old line
+   fades out before the new one fades in, so two sentences never print over each other. */
+#gap .gg .gg-cap { display: grid; margin-top: auto; padding-top: 10px; }
+#gap .gg .gg-cap p {
+  grid-area: 1 / 1; position: relative; margin: 0; padding-left: 13px; font-size: 12.5px; line-height: 1.45; color: var(--ink-3);
+  opacity: 0; transition: opacity .16s var(--ease), color .35s var(--ease); text-wrap: pretty;
+}
+#gap .gg .gg-cap p::before { content: ""; position: absolute; left: 0; top: .5em; width: 6px; height: 6px; border-radius: 50%; background: var(--ink-4); transition: background-color .35s var(--ease); }
+#gap .gg .gg-cap p.on { opacity: 1; transition: opacity .22s var(--ease) .16s, color .35s var(--ease); }
+#gap .gg .gg-cap b { font-weight: 620; color: var(--ink-2); }
+#gap .gg .gg-panel.is-now .gg-cap p { color: var(--ink-2); }
+#gap .gg .gg-panel.is-now .gg-cap p::before { background: var(--blue); }
+#gap .gg .gg-panel.is-now .gg-cap b { color: var(--ink); }
+
+/* the arrows between the panels; a token rides each one as its stage completes */
+#gap .gg .gg-arrow { position: relative; z-index: 3; }
+#gap .gg .gg-shaft { position: absolute; left: 8px; right: 9px; top: 50%; height: 2.5px; margin-top: -1.25px; background: var(--ink); border-radius: 2px 0 0 2px; }
+#gap .gg .gg-shaft::after { content: ""; position: absolute; right: -6px; top: 50%; margin-top: -6.5px; border: 6.5px solid transparent; border-left: 10px solid var(--ink); border-right: 0; }
+#gap .gg .gg-tok {
+  position: absolute; left: calc(-12px + var(--p, 0) * (100% + 24px)); top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px;
+  border-radius: 6px; opacity: 0; box-shadow: 0 0 0 2px var(--bg), 0 6px 14px -6px rgba(0, 0, 0, .45); pointer-events: none;
+}
+#gap .gg .gg-tok svg { display: block; width: 22px; height: 22px; }
+#gap .gg .gg-tok-setup .gg-tok-bg { fill: var(--blue-fill); }
+#gap .gg .gg-tok-patch .gg-tok-bg { fill: var(--block); }
+#gap .gg .gg-tok-ink { fill: var(--on-blue); }
+#gap .gg .gg-tok-code { fill: none; stroke: var(--on-block); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+/* a mark that has not been reached yet waits at --gg-dim; --a brings it in */
+#gap .gg .gg-st, #gap .gg .gg-wl-k, #gap .gg .gg-comp li, #gap .gg .gg-more,
+#gap .gg .gg-agent, #gap .gg .gg-ana-h, #gap .gg .gg-ana-l, #gap .gg .gg-gain span, #gap .gg .gg-gain b,
+#gap .gg .gg-cols, #gap .gg .gg-row > .gg-rank, #gap .gg .gg-row > .gg-mech {
+  opacity: calc(var(--gg-dim) + (1 - var(--gg-dim)) * var(--a, 1));
+}
+/* once another card is chosen (--dim), the charts and logos of the rest step back; their text stays at full strength,
+   as in Fig. 1, where the blue ring alone marks the choice */
+#gap .gg .gg-logos { opacity: calc((var(--gg-dim) + (1 - var(--gg-dim)) * var(--a, 1)) * (1 - .36 * var(--dim, 0))); }
+#gap .gg .gg-setup .gg-ch, #gap .gg .gg-ana .gg-ch { opacity: calc(1 - .36 * var(--dim, 0)); }
+/* the black blocks wait as a whole, so a pending panel shows a gray block rather than a heavy black one */
+#gap .gg .gg-impl, #gap .gg .gg-formula { opacity: calc(var(--gg-dim) + (1 - var(--gg-dim)) * var(--a, 1)); }
+/* the selection: Fig. 1's thick blue stroke */
+#gap .gg .gg-ring { position: absolute; inset: 0; z-index: 1; border-radius: inherit; box-shadow: 0 0 0 2.5px var(--blue); opacity: var(--sel, 0); pointer-events: none; }
+
+/* ------------------------------------------------------------------ mini charts */
+#gap .gg .gg-ch { position: relative; height: 36px; border-bottom: 1.5px solid var(--gg-line); }
+#gap .gg .gg-ch-free { border-bottom: 0; }
+#gap .gg .gg-ch-in { position: absolute; inset: 0; }
+#gap .gg .gg-ch svg { display: block; width: 100%; height: 100%; overflow: visible; }
+#gap .gg .gg-bg { transform-box: fill-box; transform-origin: 50% 100%; transform: scaleY(0); }
+#gap .gg .gg-b { fill: var(--gg-pale); }
+#gap .gg .gg-b-hi { fill: var(--blue); opacity: 0; }
+#gap .gg .gg-area { fill: var(--gg-pale); }
+#gap .gg .gg-bell { fill: var(--gg-bell); }
+#gap .gg .gg-bell-2 { fill-opacity: .75; }
+#gap .gg .gg-ln { fill: none; stroke: var(--blue); stroke-width: 1.6px; stroke-linejoin: round; stroke-linecap: round; }
+#gap .gg .gg-ln-2 { stroke: var(--blue-2); }
+#gap .gg .gg-ln-lt { stroke: var(--gg-pale); }
+
+/* ------------------------------------------------------------------ 1. setups */
+#gap .gg .gg-setups { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding-top: 4px; }
+#gap .gg .gg-setup {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(132px, 1fr); grid-template-areas: "sh sh" "wl comp";
+  gap: 6px 10px; padding: 9px 10px 10px; border-radius: 12px; background: var(--gg-card); container: gg-card / inline-size;
+}
+#gap .gg .gg-sh { grid-area: sh; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+#gap .gg .gg-tab {
+  position: absolute; right: 12px; top: 0; z-index: 2; padding: 2px 9px; border-radius: 999px; background: var(--blue-fill); color: var(--on-blue);
+  font-family: var(--mono); font-size: 11px; font-weight: 600; line-height: 16px; white-space: nowrap;
+  opacity: var(--sel, 0); transform: translateY(-58%) scale(calc(.85 + .15 * var(--sel, 0))); transform-origin: 100% 50%;
+}
+#gap .gg .gg-st { min-width: 0; margin: 0; font-size: 12.5px; font-weight: 650; line-height: 18px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#gap .gg .gg-st b { font-weight: inherit; color: var(--blue-ink); }
+#gap .gg .gg-logos { flex: none; display: flex; align-items: center; gap: 5px; height: 18px; }
+#gap .gg .gg-eng { --lh: 14px; position: relative; display: block; flex: none; height: var(--lh); }
+#gap .gg .gg-vllm { aspect-ratio: 582 / 184; background: url(../img/kit/gg-vllm-v.png) 0 0 / 100% 100% no-repeat; }
+#gap .gg .gg-vllm::after {
+  content: ""; position: absolute; inset: 0; background: var(--gg-llm);
+  -webkit-mask: url(../img/kit/gg-vllm-llm.png) 0 0 / 100% 100% no-repeat; mask: url(../img/kit/gg-vllm-llm.png) 0 0 / 100% 100% no-repeat;
+}
+#gap .gg .gg-sgl {
+  aspect-ratio: 720 / 209; background: var(--ink);
+  -webkit-mask: url(../img/kit/sgl.png) 0 0 / 100% 100% no-repeat; mask: url(../img/kit/sgl.png) 0 0 / 100% 100% no-repeat;
+}
+#gap .gg .gg-mark { display: block; flex: none; }
+#gap .gg .gg-mark-meta { width: 21px; height: 21px; }
+#gap .gg .gg-mark-qwen { width: 17px; height: 17px; }
+#gap .gg .gg-mark-moe { width: 20px; height: 17px; }
+#gap .gg .gg-mark-mamba { width: 25px; height: 10px; }
+#gap .gg .gg-mk { fill: var(--blue); }
+#gap .gg .gg-moe-on { stroke: var(--blue); stroke-width: 12; }
+#gap .gg .gg-moe-off { stroke: var(--gg-pale); stroke-width: 9; }
+#gap .gg .gg-moe-idle { fill: var(--gg-card); stroke: var(--gg-pale); stroke-width: 8; }
+#gap .gg .gg-mamba { fill: none; stroke: var(--blue); stroke-width: 17; stroke-linejoin: round; }
+#gap .gg .gg-eye { fill: var(--gg-card); }
+#gap .gg .gg-wl { grid-area: wl; display: flex; flex-direction: column; justify-content: flex-end; min-width: 0; }
+#gap .gg .gg-wl .gg-ch { height: 38px; }
+#gap .gg .gg-wl-k { margin: 4px 0 0; font-size: 11.5px; font-style: italic; line-height: 1.25; color: var(--ink-3); }
+#gap .gg .gg-comp {
+  grid-area: comp; margin: 0; padding: 5px 8px; list-style: none; border-radius: 8px; background: var(--panel);
+  font-size: 11.5px; font-weight: 600; line-height: 13.5px; color: var(--ink);
+}
+#gap .gg .gg-comp li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#gap .gg .gg-comp .gg-etc { line-height: 10px; padding-bottom: 3px; color: var(--ink-3); letter-spacing: .08em; }
+#gap .gg .gg-more { margin: 7px 0 0; font-size: 14px; font-weight: 700; line-height: 12px; letter-spacing: .14em; text-align: center; color: var(--ink-3); }
+
+/* ------------------------------------------------------------------ 2. the analytical agent */
+#gap .gg .gg-agent { display: flex; align-items: flex-start; gap: 10px; }
+#gap .gg .gg-head {
+  flex: none; width: 38px; height: 38px; background: var(--ink);
+  -webkit-mask: url(../img/kit/analyzer-black.png) center / contain no-repeat; mask: url(../img/kit/analyzer-black.png) center / contain no-repeat;
+}
+#gap .gg .gg-agent-h { margin: 0; font-size: 14px; font-weight: 650; line-height: 1.3; color: var(--ink); }
+#gap .gg .gg-agent-h em { font-style: normal; color: var(--blue-ink); }
+#gap .gg .gg-agent-s { margin: 2px 0 0; font-size: 11.5px; font-style: italic; line-height: 1.35; color: var(--ink-3); text-wrap: pretty; }
+#gap .gg .gg-fan, #gap .gg .gg-conv { display: block; flex: none; width: 100%; height: 30px; overflow: visible; }
+#gap .gg .gg-wire { fill: none; stroke: var(--gg-line); stroke-width: 2px; stroke-dasharray: 1 1; stroke-dashoffset: 1; }
+#gap .gg .gg-wire-head { fill: var(--gg-line); opacity: 0; }
+#gap .gg .gg-run { stroke: var(--blue); stroke-width: 2.5px; }
+#gap .gg .gg-dot { fill: var(--blue); stroke: var(--bg); stroke-width: 2px; opacity: 0; }
+#gap .gg .gg-anas { flex: 1 0 auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+#gap .gg .gg-ana {
+  position: relative; display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 8px 6px 6px;
+  border-radius: 12px; background: var(--panel); text-align: center; container: gg-ana / inline-size;
+}
+#gap .gg .gg-ana-h { display: flex; align-items: center; justify-content: center; gap: 4px; margin: 0; font-size: 12.5px; font-weight: 650; line-height: 18px; color: var(--ink); white-space: nowrap; }
+#gap .gg .gg-ana-h .nb { width: 17px; height: 17px; font-size: 11px; }
+#gap .gg .gg-ana .gg-ch { flex: 1 0 40px; height: auto; max-height: 64px; }
+#gap .gg .gg-ana-l { margin: 0; min-height: calc(3 * 1.3em); font-size: 11.5px; line-height: 1.3; color: var(--ink-2); text-wrap: balance; }
+#gap .gg .gg-gain { display: flex; flex-direction: column; align-items: center; margin: 0; padding: 5px 2px 4px; border-radius: 9px; background: var(--bg); }
+#gap .gg .gg-gain span { font-family: var(--mono); font-size: 11px; font-weight: 600; line-height: 14px; color: var(--ink-2); white-space: nowrap; }
+#gap .gg .gg-gain b { font-size: 18px; font-weight: 700; line-height: 22px; color: var(--blue-ink); font-variant-numeric: tabular-nums; }
+#gap .gg .gg-impl {
+  position: relative; display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0 auto; width: min(100%, 300px);
+  padding: 9px 16px; border-radius: 12px; background: var(--block); color: var(--on-block);
+}
+#gap .gg .gg-impl-ring { position: absolute; inset: 0; border-radius: inherit; box-shadow: 0 0 0 3px var(--blue); opacity: 0; pointer-events: none; }
+#gap .gg .gg-code { font-family: var(--mono); font-size: 20px; font-weight: 700; line-height: 1; letter-spacing: -.04em; }
+#gap .gg .gg-impl-t { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+#gap .gg .gg-impl-t b { font-family: var(--mono); font-size: 14px; font-weight: 700; }
+#gap .gg .gg-impl-t small { font-size: 11.5px; font-style: italic; opacity: .78; }
+/* side by side, panel 1 sets the height: panel 2 shares what is left between its charts and its two sets of wires
+   (layoutWires reads their measured height), so no card is left with an empty band */
+@media (min-width: 1081px) {
+  #gap .gg .gg-fan, #gap .gg .gg-conv { flex: 1 0 30px; }
+  #gap .gg .gg-ana .gg-ch { max-height: 104px; }
+}
+
+/* ------------------------------------------------------------------ 3. candidate mechanisms, the expert, the score */
+#gap .gg .gg-board { flex: 1 0 auto; display: flex; flex-direction: column; container: gg-board / inline-size; }
+#gap .gg .gg-cols { display: flex; justify-content: space-between; gap: 10px; margin: 0 0 6px; padding: 0 10px; font-size: 11.5px; font-weight: 600; color: var(--ink-3); }
+#gap .gg .gg-rows { display: grid; gap: 6px; }
+#gap .gg .gg-row {
+  position: relative; display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; grid-template-areas: "rank mech mech" "rank track val";
+  align-items: center; gap: 3px 8px; padding: 8px 10px; border-radius: 12px; background: var(--bg);
+}
+#gap .gg .gg-rank { grid-area: rank; display: flex; align-items: center; gap: 5px; font-size: 14px; font-weight: 650; color: var(--ink-3); }
+#gap .gg .gg-row[data-r="1"] .gg-rank { color: var(--blue-ink); }
+#gap .gg .gg-rank .nb { width: 18px; height: 18px; font-size: 11px; }
+#gap .gg .gg-who { font-family: var(--mono); font-size: 11.5px; font-weight: 700; line-height: 1.2; color: var(--ink); }
+#gap .gg .gg-mech { grid-area: mech; min-width: 0; }
+#gap .gg .gg-mech b { display: block; font-size: 12.5px; font-weight: 650; line-height: 1.3; color: var(--ink); }
+#gap .gg .gg-mech i { display: block; font-size: 11.5px; line-height: 1.3; color: var(--ink-3); }
+#gap .gg .gg-track { grid-area: track; position: relative; height: 10px; border-radius: 3px; background: var(--gg-track); overflow: hidden; }
+#gap .gg .gg-fill { position: absolute; inset: 0; border-radius: 3px; transform-origin: 0 50%; transform: scaleX(0); }
+#gap .gg .gg-fill-pred { background: var(--gg-pred); }
+#gap .gg .gg-fill-meas { background: var(--blue); }
+#gap .gg .gg-fill-exp { background: var(--ink-2); }
+#gap .gg .gg-val { grid-area: val; min-width: 58px; min-height: 18px; text-align: right; font-size: 15px; font-weight: 700; line-height: 18px; color: var(--blue-ink); font-variant-numeric: tabular-nums; white-space: nowrap; opacity: var(--a, 1); }
+#gap .gg .gg-val-nb { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--ink-3); }
+#gap .gg .gg-val-exp { color: var(--ink); }
+/* the expert row's outline waits with the row */
+#gap .gg .gg-expert::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 2.5px var(--ink-2); pointer-events: none;
+  opacity: calc(var(--gg-dim) + (1 - var(--gg-dim)) * var(--a, 1));
+}
+/* compare: Fig. 1's double arrow between the ranked list and the expert, beside the black formula block */
+#gap .gg .gg-cmp { flex: 1 0 auto; display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 8px; margin: 6px 0; }
+#gap .gg .gg-cmp-a { position: relative; min-height: 62px; }
+#gap .gg .gg-cmp-line { position: absolute; left: 13px; top: 3px; bottom: 3px; width: 2px; margin-left: -1px; background: var(--ink-2); transform: scaleY(var(--p, 1)); }
+#gap .gg .gg-cmp-a::before, #gap .gg .gg-cmp-a::after {
+  content: ""; position: absolute; left: 13px; margin-left: -6px; border: 6px solid transparent; opacity: calc((var(--p, 1) - .75) * 4);
+}
+#gap .gg .gg-cmp-a::before { top: -4px; border-bottom: 9px solid var(--ink-2); border-top: 0; }
+#gap .gg .gg-cmp-a::after { bottom: -4px; border-top: 9px solid var(--ink-2); border-bottom: 0; }
+#gap .gg .gg-cmp-a em { position: absolute; left: 22px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--ink-2); opacity: var(--p, 1); }
+/* the block hugs its two lines; a tall compare row lengthens the arrow instead */
+#gap .gg .gg-formula {
+  display: flex; flex-direction: column; justify-content: center; gap: 3px; align-self: center; min-width: 0; padding: 9px 12px; border-radius: 12px;
+  background: var(--block); color: var(--on-block); text-align: center;
+}
+#gap .gg .gg-f1, #gap .gg .gg-f2 { margin: 0; font-size: 12.5px; font-weight: 650; line-height: 1.35; text-wrap: balance; }
+#gap .gg .gg-f2 { opacity: var(--a, 1); }
+#gap .gg .gg-fb { color: var(--gg-on-block-blue); }
+#gap .gg .gg-f2 b { font-size: 17px; font-weight: 700; color: var(--gg-on-block-blue); font-variant-numeric: tabular-nums; white-space: nowrap; }
+#gap .gg .gg-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 8px 2px 0; font-size: 11.5px; line-height: 1.4; color: var(--ink-3); opacity: calc(var(--gg-dim) + (1 - var(--gg-dim)) * var(--a, 1)); }
+#gap .gg .gg-legend span { display: inline-flex; align-items: center; gap: 6px; }
+#gap .gg .gg-legend i { width: 14px; height: 8px; border-radius: 2px; }
+#gap .gg .gg-lg-pred { background: var(--gg-pred); }
+#gap .gg .gg-lg-meas { background: var(--blue); }
+#gap .gg .gg-lg-exp { background: var(--ink-2); }
+/* a wide board: Fig. 1's table, one line per mechanism */
+@container gg-board (min-width: 440px) {
+  #gap .gg .gg-row { grid-template-columns: 64px minmax(0, 1fr) minmax(0, 34%) 62px; grid-template-areas: "rank mech track val"; gap: 0 12px; }
+  #gap .gg .gg-cmp { grid-template-columns: 96px minmax(0, 1fr); }
+}
+
+/* wide setup cards (stacked panels) give the workload chart more height */
+@container gg-card (min-width: 420px) {
+  #gap .gg .gg-wl .gg-ch { height: 48px; }
+}
+
+/* the analyses' contents grow with their cards when the panels stack */
+@container gg-ana (min-width: 150px) {
+  #gap .gg .gg-ana-l { min-height: calc(2 * 1.3em); font-size: 12px; }
+  #gap .gg .gg-ana .gg-ch { flex: 0 0 60px; max-height: none; width: min(100% - 12px, 210px); margin: 2px auto 0; }
+  #gap .gg .gg-gain b { font-size: 20px; }
+}
+
+@container gg-ana (min-width: 240px) {
+  #gap .gg .gg-ana .gg-ch { flex-basis: 72px; width: 220px; }
+}
+
+/* ------------------------------------------------------------------ stacked: one panel per row, arrows pointing down */
+@media (max-width: 1080px) {
+  #gap .gg .gg-stage { grid-template-columns: minmax(0, 1fr); }
+  #gap .gg .gg-arrow { height: 44px; }
+  #gap .gg .gg-shaft { left: 50%; right: auto; top: 7px; bottom: 10px; width: 2.5px; height: auto; margin: 0 0 0 -1.25px; border-radius: 2px 2px 0 0; }
+  #gap .gg .gg-shaft::after { right: auto; top: auto; left: 50%; bottom: -6px; margin: 0 0 0 -6.5px; border: 6.5px solid transparent; border-top: 10px solid var(--ink); border-bottom: 0; }
+  #gap .gg .gg-tok { left: 50%; top: calc(-12px + var(--p, 0) * (100% + 24px)); }
+  #gap .gg .gg-panel { padding: 16px 16px 14px; }
+  #gap .gg .gg-p2 { padding: 14px 14px 12px; }
+  #gap .gg .gg-anas { gap: 10px; }
+  #gap .gg .gg-ana { padding: 10px 8px 8px; }
+  #gap .gg .gg-impl { width: min(100%, 340px); }
+}
+@media (min-width: 680px) and (max-width: 1080px) {
+  #gap .gg .gg-setups { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+}
+@media (max-width: 760px) {
+  #gap .gg .gg-top { align-items: flex-start; }
+  #gap .gg .gg-panel { padding: 14px 12px 12px; }
+  #gap .gg .gg-p2 { padding: 12px 10px 10px; }
+  #gap .gg .gg-anas { gap: 6px; }
+  #gap .gg .gg-ana { padding: 8px 5px 6px; }
+}
+
+/* still frames (reduced motion, ?reveal=all) and print show the finished figure without transitions */
+#gap .gg .is-still .gg-cap p, #gap .gg .is-still .gg-cap p.on, #gap .gg .is-still .gg-ph, #gap .gg .is-still .gg-ph .nb { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  #gap .gg .gg-cap p, #gap .gg .gg-cap p.on, #gap .gg .gg-ph, #gap .gg .gg-ph .nb, #gap .gg .gg-ph em, #gap .gg .gg-play { transition: none; }
+}
+@media print {
+  #gap .gg .gg-play { display: none; }
+  #gap .gg .gg-tok, #gap .gg .gg-dot { display: none; }
+}
