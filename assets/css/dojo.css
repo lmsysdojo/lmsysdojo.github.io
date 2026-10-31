@@ -1,0 +1,394 @@
+/* LMSysDojo project page: section 01, the environment. The typeset formula, the property cards, the checker
+ * pipeline, and the four interactive pieces drawn by assets/js/dojo.js: the normalized-gain calculator, the census
+ * funnel with its temporal splits, the benchmark composition and the sealed sandbox. Everything is scoped to #dojo. */
+
+#dojo { --dj-ease: cubic-bezier(.16, 1, .3, 1); --dj-thumb: 22px; }
+
+/* ------------------------------------------------------------------ the formula, set like a display equation */
+#dojo .formula {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 14px;
+  margin: 26px 0 0; padding: 22px 24px; border-radius: var(--rad);
+  background: var(--panel); color: var(--ink);
+  font-size: 17.5px; line-height: 1.3; letter-spacing: -.005em;
+}
+#dojo .formula .f-lhs { font-weight: 560; white-space: nowrap; }
+#dojo .formula .f-eq { color: var(--ink-3); }
+#dojo .formula .f-frac { display: inline-grid; text-align: center; min-width: 0; }
+/* numerator in the agent's blue, denominator in the expert's ink, as in the calculator */
+#dojo .formula .f-num { padding: 0 6px 7px; border-bottom: 1.5px solid var(--ink); color: var(--blue-ink); }
+#dojo .formula .f-den { padding: 7px 6px 0; }
+@container (max-width: 470px) { #dojo .formula { font-size: 15.5px; padding: 20px 16px; gap: 10px; } }
+@container (max-width: 360px) { #dojo .formula { font-size: 14.5px; } }
+
+/* ------------------------------------------------------------------ scored against the expert: text + calculator */
+#dojo .dojo-gain { align-items: start; }
+#dojo .dojo-gain > div:first-child { padding-top: 6px; container-type: inline-size; }
+
+/* ------------------------------------------------------------------ four properties */
+#dojo .props { gap: 16px; }
+#dojo .props .box { display: flex; flex-direction: column; padding: 26px 24px 26px; border-radius: var(--rad-lg); }
+#dojo .props .box h4 { flex-direction: column; align-items: flex-start; gap: 18px; font-size: 17px; letter-spacing: -.012em; line-height: 1.25; }
+/* the figures' numbered blue circles */
+#dojo .props .box h4 .idx {
+  display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--blue-fill); color: var(--on-blue); font-size: 11.5px; letter-spacing: 0;
+}
+#dojo .props .box p { font-size: 15px; }
+@media (max-width: 760px) {
+  #dojo .props .box { padding: 20px 20px 22px; }
+  #dojo .props .box h4 { flex-direction: row; align-items: center; gap: 12px; margin-bottom: 8px; }
+}
+
+/* ------------------------------------------------------------------ checker -> scorer, a three-step pipeline */
+#dojo .checker { position: relative; margin-top: 20px; gap: 28px; }
+#dojo .checker .box {
+  position: relative; padding: 22px 22px 24px; border-radius: var(--rad);
+  border: 1px solid var(--line); background: var(--bg);
+}
+#dojo .checker .box h4 { font-size: 16.5px; }
+#dojo .checker .box h4 .idx {
+  padding: 2px 8px; border-radius: 999px; background: var(--blue-bg); color: var(--blue-ink);
+  font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; line-height: 1.5;
+}
+#dojo .checker .box:last-child { border-color: color-mix(in srgb, var(--violet) 34%, var(--line)); background: color-mix(in srgb, var(--violet-bg) 55%, var(--bg)); }
+#dojo .checker .box:last-child h4 .idx { background: var(--violet); color: var(--on-block); }
+#dojo .checker .box p { font-size: 14.5px; }
+/* chevrons between the steps */
+#dojo .checker .box + .box::before {
+  content: ""; position: absolute; left: -21px; top: 50%; width: 12px; height: 12px; margin-top: -6px;
+  border-top: 1.5px solid var(--ink-4); border-right: 1.5px solid var(--ink-4); transform: rotate(45deg);
+}
+@media (max-width: 760px) {
+  #dojo .checker { gap: 26px; }
+  #dojo .checker .box + .box::before { left: 50%; top: -19px; margin: 0 0 0 -6px; transform: rotate(135deg); }
+}
+
+/* ------------------------------------------------------------------ 1. normalized-gain calculator (dojo.js) */
+#dojo .gw {
+  --gw-r: var(--blue-2);
+  position: relative; padding: 26px 28px 24px; border-radius: var(--rad-lg);
+  background: var(--panel-blue); color: var(--ink);
+}
+:root[data-theme="dark"] #dojo .gw { --gw-r: #0066D6; }
+#dojo .gw-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#dojo .gw-kicker { font-family: var(--mono); font-size: 11.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--blue-ink); }
+#dojo .gw-preset { flex: none; padding: 5px 12px 5px 6px; font-size: 13px; gap: 7px; white-space: nowrap; background: var(--bg); border-color: transparent; }
+#dojo .gw-preset[aria-pressed="true"] { background: var(--block); border-color: var(--block); color: var(--on-block); }
+#dojo .gw-preset-k {
+  font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: .04em;
+  padding: 1px 7px; border-radius: 999px; background: var(--panel); color: var(--ink-2);
+}
+#dojo .gw-preset[aria-pressed="true"] .gw-preset-k { background: color-mix(in srgb, var(--on-block) 18%, transparent); color: inherit; }
+
+#dojo .gw-result { display: flex; align-items: center; gap: 12px 26px; flex-wrap: wrap; margin: 14px 0 22px; }
+#dojo .gw-big {
+  display: flex; align-items: baseline; min-width: 3.1ch;
+  font-size: clamp(58px, 6vw, 80px); font-weight: 520; letter-spacing: -.045em; line-height: .96;
+  font-variant-numeric: tabular-nums; color: var(--ink); transition: color .35s var(--dj-ease);
+}
+#dojo .gw-big-u { font-size: .46em; font-weight: 500; letter-spacing: 0; margin-left: 4px; color: var(--ink-3); }
+#dojo .gw[data-state="match"] .gw-big, #dojo .gw[data-state="beat"] .gw-big, #dojo .gw[data-state="cap"] .gw-big { color: var(--blue); }
+#dojo .gw-side { display: grid; gap: 10px; min-width: 0; }
+/* the figure's black formula block: agent gain / expert gain = normalized gain */
+#dojo .gw-eq {
+  justify-self: start; padding: 8px 14px; border-radius: 10px; background: var(--block); color: var(--on-block);
+  font-family: var(--mono); font-size: 14px; line-height: 1.4; white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+#dojo .gw-eq b { font-weight: 600; }
+#dojo .gw-eq span { opacity: .66; }
+#dojo .gw-eq .gw-eq-r { color: var(--gw-r); }
+#dojo .gw-verdict { display: flex; align-items: center; gap: 9px; margin: 0; font-size: 15px; font-weight: 550; color: var(--ink); }
+#dojo .gw-verdict-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ink-4); flex: none; transition: background-color .3s, box-shadow .3s; }
+#dojo .gw[data-state="match"] .gw-verdict-dot { background: var(--blue); }
+#dojo .gw[data-state="beat"] .gw-verdict-dot, #dojo .gw[data-state="cap"] .gw-verdict-dot { background: var(--blue); box-shadow: 0 0 0 4px color-mix(in srgb, var(--blue) 22%, transparent); }
+
+/* sliders: a rail drawn behind a transparent native range, both mapped onto 1.00x..3.00x */
+#dojo .gw-sliders { display: grid; gap: 10px; }
+#dojo .gw-slider-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 0 2px; }
+#dojo .gw-slider label { font-size: 14px; font-weight: 550; color: var(--ink-2); cursor: pointer; }
+#dojo .gw-val { display: inline-flex; align-items: baseline; gap: 8px; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+#dojo .gw-val b { font-size: 15px; font-weight: 600; color: var(--ink); }
+#dojo .gw-val small { font-size: 12.5px; color: var(--ink-3); min-width: 4.6ch; text-align: right; }
+#dojo .gw-track { position: relative; height: 28px; }
+#dojo .gw-rail {
+  position: absolute; left: calc(var(--dj-thumb) / 2); right: calc(var(--dj-thumb) / 2); top: 50%; height: 6px; margin-top: -3px;
+  border-radius: 3px; background: var(--bg); overflow: hidden;
+}
+#dojo .gw-fill { position: absolute; inset: 0; transform-origin: 0 50%; transform: scaleX(0); background: var(--blue); }
+#dojo .gw-e .gw-fill { background: var(--block); }
+#dojo .gw input[type="range"] {
+  -webkit-appearance: none; appearance: none; position: relative; display: block; margin: 0; width: 100%; height: 28px;
+  background: transparent; cursor: pointer; border-radius: 999px;
+}
+/* the expert's range starts at 1.05x: shift it so both thumbs share one 1x..3x axis */
+#dojo .gw-e input[type="range"] { margin-left: calc((100% - var(--dj-thumb)) * .025); width: calc(100% - (100% - var(--dj-thumb)) * .025); }
+#dojo .gw input[type="range"]:focus { outline: none; }
+#dojo .gw input[type="range"]::-webkit-slider-runnable-track { height: 28px; background: transparent; border: 0; }
+#dojo .gw input[type="range"]::-moz-range-track { height: 28px; background: transparent; border: 0; }
+#dojo .gw input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: var(--dj-thumb); height: var(--dj-thumb); margin-top: 3px; border-radius: 50%;
+  background: var(--bg); border: 2.5px solid var(--blue); box-shadow: 0 1px 2px rgba(16, 24, 40, .18), 0 2px 8px -2px rgba(16, 24, 40, .16);
+  transition: transform .2s var(--dj-ease), box-shadow .2s;
+}
+#dojo .gw input[type="range"]::-moz-range-thumb {
+  box-sizing: border-box; width: var(--dj-thumb); height: var(--dj-thumb); border-radius: 50%;
+  background: var(--bg); border: 2.5px solid var(--blue); box-shadow: 0 1px 2px rgba(16, 24, 40, .18), 0 2px 8px -2px rgba(16, 24, 40, .16);
+}
+#dojo .gw-e input[type="range"]::-webkit-slider-thumb { border-color: var(--block); }
+#dojo .gw-e input[type="range"]::-moz-range-thumb { border-color: var(--block); }
+#dojo .gw input[type="range"]:hover::-webkit-slider-thumb, #dojo .gw input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.1); }
+/* keyboard focus: a solid ring outside a gap in the page colour, readable on the blue panel in both themes */
+#dojo .gw input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--blue); }
+#dojo .gw input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--blue); }
+#dojo .gw-ruler { position: relative; height: 16px; margin-top: -2px; font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+#dojo .gw-ruler span { position: absolute; top: 0; transform: translateX(-50%); }
+#dojo .gw-ruler span:nth-child(1) { left: calc(var(--dj-thumb) / 2); }
+#dojo .gw-ruler span:nth-child(2) { left: calc(var(--dj-thumb) / 2 + (100% - var(--dj-thumb)) * .25); }
+#dojo .gw-ruler span:nth-child(3) { left: calc(var(--dj-thumb) / 2 + (100% - var(--dj-thumb)) * .5); }
+#dojo .gw-ruler span:nth-child(4) { left: calc(var(--dj-thumb) / 2 + (100% - var(--dj-thumb)) * .75); }
+#dojo .gw-ruler span:nth-child(5) { left: calc(100% - var(--dj-thumb) / 2); }
+
+/* the normalized scale: 0% .. 100% (expert) .. 300% (cap), linear */
+#dojo .gw-scale { margin-top: 30px; padding-top: 22px; border-top: 1px solid color-mix(in srgb, var(--blue) 16%, transparent); }
+#dojo .gw-bar { position: relative; height: 12px; margin: 22px 0 0; }
+#dojo .gw-clip { position: absolute; inset: 0; overflow: hidden; border-radius: 999px; background: var(--bg); }
+#dojo .gw-zone {
+  position: absolute; top: 0; bottom: 0; left: 33.3333%; right: 0;
+  background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--blue) 22%, transparent) 0 1.5px, transparent 1.5px 6px);
+}
+#dojo .gw-run { position: absolute; inset: 0; border-radius: 999px; background: var(--blue); transform: translateX(-100%); }
+#dojo .gw-exp { position: absolute; left: 33.3333%; top: -7px; bottom: -7px; width: 2px; margin-left: -1px; border-radius: 2px; background: var(--block); }
+#dojo .gw-needle-x { position: absolute; left: 0; top: 0; bottom: 0; width: 0; pointer-events: none; }
+#dojo .gw-needle {
+  position: absolute; left: 0; top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%;
+  background: var(--bg); border: 3.5px solid var(--blue); box-shadow: 0 1px 4px rgba(16, 24, 40, .22);
+}
+#dojo .gw-needle-k {
+  position: absolute; left: 50%; bottom: 21px; transform: translateX(-50%);
+  font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--blue-ink);
+}
+#dojo .gw-marks { position: relative; height: 36px; margin-top: 12px; font-size: 12.5px; line-height: 1.3; color: var(--ink-3); }
+#dojo .gw-marks span { position: absolute; top: 0; display: flex; flex-direction: column; white-space: nowrap; }
+#dojo .gw-marks b { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--ink); }
+#dojo .gw-m0 { left: 0; }
+#dojo .gw-m1 { left: 33.3333%; transform: translateX(-50%); align-items: center; }
+#dojo .gw-marks .gw-mz { left: 66.6667%; top: 8px; transform: translateX(-50%); color: var(--blue-ink); font-style: italic; }
+#dojo .gw-m3 { right: 0; align-items: flex-end; }
+@media (max-width: 560px) {
+  #dojo .gw { padding: 22px 20px 20px; }
+  #dojo .gw-try { display: none; }
+  #dojo .gw-result { flex-direction: column; align-items: flex-start; gap: 14px; }
+  #dojo .gw-marks { font-size: 11.5px; }
+}
+
+/* ------------------------------------------------------------------ 2. census funnel + splits (dojo.js) */
+#dojo .fn-wrap {
+  --fn-meta: 220px; --fn-gap: 36px;
+  padding: 30px 36px 32px; border: 1px solid var(--line); border-radius: var(--rad-lg); background: var(--bg);
+}
+#dojo .fn-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 22px; margin-bottom: 26px; }
+#dojo .fn-kicker { font-family: var(--mono); font-size: 11.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--blue-ink); }
+#dojo .fn-key { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink-2); }
+#dojo .fn-key i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+#dojo .fn-key i.fn-s { margin-left: 10px; }
+#dojo .fn-note { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+#dojo .fn-v { background: var(--blue); }
+#dojo .fn-s { background: var(--blue-2); }
+
+#dojo .fn-stages { list-style: none; margin: 0; padding: 0; }
+#dojo .fn-stage, #dojo .fn-link { display: grid; grid-template-columns: var(--fn-meta) minmax(0, 1fr); gap: var(--fn-gap); align-items: center; }
+#dojo .fn-stage .fn-meta { display: flex; flex-direction: column; gap: 2px; }
+#dojo .fn-n { font-size: clamp(30px, 3vw, 38px); font-weight: 520; letter-spacing: -.035em; line-height: 1; font-variant-numeric: tabular-nums; color: var(--ink); }
+#dojo .fn-stage:last-child .fn-n { color: var(--blue); }
+#dojo .fn-l { font-size: 14px; color: var(--ink-3); }
+#dojo .fn-col { position: relative; min-width: 0; }
+#dojo .fn-bar {
+  display: flex; gap: 2px; width: var(--w); height: 38px; margin: 0 auto; border-radius: 10px; overflow: hidden;
+}
+#dojo .fn-seg { display: block; min-width: 3px; }
+#dojo .fn-split { display: flex; justify-content: space-between; gap: 10px; width: var(--w); margin: 8px auto 0; font-size: 12.5px; color: var(--ink-3); white-space: nowrap; }
+#dojo .fn-split b { font-family: var(--mono); font-weight: 600; font-size: 12.5px; color: var(--ink); margin-left: 3px; font-variant-numeric: tabular-nums; }
+#dojo .fn-link .fn-meta { display: flex; flex-direction: column; gap: 3px; padding: 4px 0; }
+#dojo .fn-link .fn-meta b { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--blue-ink); }
+#dojo .fn-link .fn-meta span { font-size: 13px; line-height: 1.4; color: var(--ink-3); }
+#dojo .fn-trap { display: block; width: 100%; height: 62px; overflow: visible; margin: 4px 0 6px; }
+#dojo .fn-trap polygon { fill: color-mix(in srgb, var(--blue) 8%, transparent); }
+#dojo .fn-trap line { stroke: var(--blue-2); stroke-width: 1; stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; }
+
+/* entrance: bars open from their centre, links drop, labels settle (dojo.js adds .fn-in when in view) */
+#dojo .fn-ready .fn-bar { clip-path: inset(0 50% 0 50% round 10px); transition: clip-path 1.1s var(--dj-ease); transition-delay: calc(var(--i) * .42s); }
+#dojo .fn-ready .fn-split { opacity: 0; transform: translateY(-4px); transition: opacity .6s var(--dj-ease), transform .6s var(--dj-ease); transition-delay: calc(var(--i) * .42s + .5s); }
+#dojo .fn-ready .fn-link .fn-trap { transform: scaleY(0); transform-origin: 50% 0; transition: transform .7s var(--dj-ease); transition-delay: calc(var(--i) * .42s + .28s); }
+#dojo .fn-ready .fn-link .fn-meta { opacity: 0; transition: opacity .6s var(--dj-ease); transition-delay: calc(var(--i) * .42s + .45s); }
+#dojo .fn-in .fn-bar { clip-path: inset(0 0 0 0 round 10px); }
+#dojo .fn-in .fn-split, #dojo .fn-in .fn-link .fn-meta { opacity: 1; transform: none; }
+#dojo .fn-in .fn-link .fn-trap { transform: none; }
+
+/* the splits on a merge-date axis */
+#dojo .tl { --tl-geo: 128px; position: relative; margin-top: 34px; padding-top: 26px; border-top: 1px solid var(--line); }
+#dojo .tl-row { display: grid; grid-template-columns: var(--fn-meta) minmax(0, 1fr) var(--tl-geo); gap: var(--fn-gap); align-items: center; }
+#dojo .tl-headrow { margin-bottom: 18px; align-items: end; }
+#dojo .tl-geo-h { font-size: 12px; line-height: 1.3; color: var(--ink-3); text-align: right; }
+#dojo .tl-body { position: relative; display: grid; gap: 16px; }
+#dojo .tl-name b { display: block; font-size: 14.5px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+#dojo .tl-name span { display: block; font-size: 12.5px; color: var(--ink-3); line-height: 1.4; }
+#dojo .tl-body .tl-lane { position: relative; height: 10px; border-radius: 5px; background: var(--panel); }
+#dojo .tl-bar { position: absolute; top: 0; bottom: 0; border-radius: 5px; }
+#dojo .tl-geo { text-align: right; }
+#dojo .tl-geo b { font-family: var(--mono); font-size: 15px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+#dojo .tl-headrow .tl-lane { position: relative; height: 18px; }
+#dojo .tl-cut-k {
+  position: absolute; bottom: 0; left: calc(var(--cut) * 100%); transform: translateX(-100%); padding-right: 9px;
+  font-size: 12px; color: var(--ink-3); white-space: nowrap;
+}
+#dojo .tl-cut-k b { font-family: var(--mono); font-weight: 600; color: var(--ink); margin-left: 2px; }
+#dojo .tl-body .tl-axis .tl-lane { height: 16px; background: none; }
+#dojo .tl-tick { position: absolute; top: 0; transform: translateX(-50%); font-family: var(--mono); font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+#dojo .tl-tick:first-child { transform: none; }
+#dojo .tl-tick:last-child { transform: translateX(-100%); }
+/* one continuous dashed line at the cutoff, across header and lanes */
+#dojo .tl-cut {
+  position: absolute; top: -26px; bottom: 22px; width: 0; border-left: 1.5px dashed var(--ink-3);
+  left: calc(var(--fn-meta) + var(--fn-gap) + (100% - var(--fn-meta) - var(--tl-geo) - 2 * var(--fn-gap)) * var(--cut));
+}
+@media (max-width: 760px) {
+  #dojo .fn-wrap { --fn-gap: 0px; padding: 22px 18px 24px; }
+  #dojo .fn-head { margin-bottom: 20px; }
+  #dojo .fn-note { margin-left: 0; flex-basis: 100%; }
+  #dojo .fn-stage { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  #dojo .fn-stage .fn-meta { flex-direction: row; align-items: baseline; gap: 10px; }
+  #dojo .fn-n { font-size: 28px; }
+  #dojo .fn-bar { height: 32px; border-radius: 8px; }
+  #dojo .fn-split { font-size: 11px; gap: 6px; }
+  #dojo .fn-split b { font-size: 11px; }
+  /* links: the key line sits inside the narrowing band */
+  #dojo .fn-link { position: relative; grid-template-columns: minmax(0, 1fr); }
+  #dojo .fn-link .fn-col { position: absolute; inset: 0; }
+  #dojo .fn-link .fn-trap { height: 100%; margin: 0; }
+  #dojo .fn-link .fn-meta { position: relative; z-index: 1; justify-self: center; text-align: center; min-height: 58px; justify-content: center; padding: 10px 0; }
+  #dojo .fn-link .fn-meta span { display: none; }
+  #dojo .fn-stage + .fn-link { margin-top: 6px; }
+  #dojo .fn-link + .fn-stage { margin-top: 6px; }
+  #dojo .tl-opt { display: none; }
+}
+/* splits: name and value on one line, the lane below; the cutoff is marked on every lane. Wider than the funnel's
+   breakpoint because the three-column row leaves the date axis too short for its labels below about 880px. */
+@media (max-width: 880px) {
+  #dojo .tl { --tl-geo: 0px; }
+  #dojo .tl-row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name geo" "lane lane"; gap: 8px 12px; }
+  #dojo .tl-row > :nth-child(1) { grid-area: name; }
+  #dojo .tl-row > :nth-child(2) { grid-area: lane; }
+  #dojo .tl-row > :nth-child(3) { grid-area: geo; }
+  #dojo .tl-headrow { margin-bottom: 10px; align-items: start; }
+  #dojo .tl-headrow .tl-lane { height: 22px; margin-top: 6px; }
+  #dojo .tl-geo-h { max-width: 9em; }
+  #dojo .tl-body { gap: 18px; }
+  #dojo .tl-axis { grid-template-areas: "lane lane"; }
+  #dojo .tl-axis > :nth-child(1), #dojo .tl-axis > :nth-child(3) { display: none; }
+  #dojo .tl-cut { display: none; }
+  #dojo .tl-body .tl-row:not(.tl-axis) .tl-lane::after {
+    content: ""; position: absolute; left: calc(var(--cut) * 100%); top: -5px; bottom: -5px; border-left: 1.5px dashed var(--ink-3);
+  }
+  #dojo .tl-headrow .tl-lane::after {
+    content: ""; position: absolute; left: calc(var(--cut) * 100%); top: 4px; bottom: 0; border-left: 1.5px dashed var(--ink-3);
+  }
+}
+#dojo .fn-ready .tl-bar { clip-path: inset(0 100% 0 0 round 5px); transition: clip-path 1s var(--dj-ease); transition-delay: calc(1.2s + var(--i) * .14s); }
+#dojo .fn-ready .tl-geo { opacity: 0; transition: opacity .6s var(--dj-ease); transition-delay: calc(1.6s + var(--i) * .14s); }
+#dojo .fn-in .tl-bar { clip-path: inset(0 0 0 0 round 5px); }
+#dojo .fn-in .tl-geo { opacity: 1; }
+
+/* ------------------------------------------------------------------ 3. composition: a calm grid of small multiples */
+#dojo .composition { margin-top: 40px; }
+#dojo .comp-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; margin: 0 0 16px; }
+#dojo .comp-note { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+#dojo .comp-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; }
+#dojo .comp-card { margin: 0; display: flex; flex-direction: column; padding: 22px 24px 18px; }
+#dojo .comp-c6 { grid-column: span 6; }
+#dojo .comp-c4 { grid-column: span 4; }
+#dojo .comp-c3 { grid-column: span 3; }
+#dojo .comp-c8 { grid-column: span 8; }
+/* four more charts behind one disclosure button (dojo.js); they open with the gap section's soft rise */
+#dojo .comp-more-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 16px; }
+#dojo .comp-toggle { color: var(--ink); font-weight: 550; }
+#dojo .comp-toggle:focus-visible { border-radius: 999px; outline-offset: 2px; }
+#dojo .comp-chev {
+  width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+  transform: translateY(-2px) rotate(45deg); transition: transform .3s var(--dj-ease);
+}
+#dojo .comp-toggle[aria-expanded="true"] .comp-chev { transform: translateY(1px) rotate(-135deg); }
+#dojo .comp-more-k { font-size: 13.5px; color: var(--ink-3); }
+#dojo .comp-more { margin-top: 16px; animation: compIn .5s var(--dj-ease); }
+@keyframes compIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (max-width: 1100px) { #dojo .comp-c3 { grid-column: span 6; } }
+/* the two long-label bar charts go full width before their label column would have to shrink */
+@media (max-width: 960px) { #dojo .comp-c6 { grid-column: span 12; } }
+#dojo .comp-cap { color: var(--ink); }
+#dojo .comp-cap h4 { font-size: 15.5px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 3px; }
+#dojo .comp-cap .cap { margin: 0 0 16px; font-size: 13px; line-height: 1.45; }
+#dojo .comp-plot.comp-mid { margin: auto 0; }
+#dojo .comp-card .chart .bar-label { font-size: 12.5px; }
+#dojo .comp-card .chart-donut .chart-legend { gap: 4px 12px; font-size: 12.5px; margin-bottom: 0; }
+@media (max-width: 760px) {
+  #dojo .comp-grid { gap: 12px; }
+  #dojo .comp-c4, #dojo .comp-c8 { grid-column: span 12; }
+  #dojo .comp-card { padding: 18px 18px 14px; }
+}
+@media (max-width: 520px) {
+  #dojo .comp-c3 { grid-column: span 12; }
+  #dojo .comp-card { padding: 18px 12px 12px 14px; }
+  #dojo .comp-card .chart .bar-label { font-size: 11.5px; }
+}
+
+/* ------------------------------------------------------------------ 4. the sealed sandbox (dojo.js) */
+#dojo .sandbox .grid2 ul { margin: 6px 0 0; padding-left: 20px; color: var(--ink-2); font-size: 15.5px; }
+#dojo .sb-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+#dojo .sb-panel { position: relative; overflow: hidden; border-radius: var(--rad-lg); padding: 24px 28px 26px; isolation: isolate; }
+/* the agent's world gets the figures' dashed blue border */
+#dojo .sb-open { background: var(--panel-blue); }
+#dojo .sb-open::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  border: 1.5px dashed color-mix(in srgb, var(--blue) 60%, transparent);
+}
+#dojo .sb-sealed { background: var(--panel); }
+#dojo .sb-sealed .note-title { color: var(--ink-3); }
+#dojo .sb-hatch {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--ink) 7%, transparent) 0 1px, transparent 1px 9px);
+}
+#dojo .sb-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 34px; margin-bottom: 12px; }
+#dojo .sb-top .note-title { margin: 0; }
+#dojo .sb-tag {
+  font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  padding: 2px 9px; border-radius: 999px; background: var(--bg); color: var(--blue-ink); line-height: 1.5;
+}
+#dojo .sb-lock { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--block); color: var(--on-block); }
+#dojo .sb-g-lock { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+#dojo .sb-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 11px; }
+#dojo .sb-list li { display: flex; align-items: flex-start; gap: 12px; font-size: 15.5px; line-height: 1.5; color: var(--ink); }
+#dojo .sb-sealed .sb-list li { color: var(--ink-2); }
+#dojo .sb-list .sb-g { flex: none; width: 18px; height: 18px; margin-top: 2.5px; border-radius: 50%; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#dojo .sb-g-check { background: var(--blue-fill); stroke: var(--on-blue); }
+#dojo .sb-g-seal { background: color-mix(in srgb, var(--ink) 10%, transparent); stroke: var(--ink-3); }
+
+/* the seal closes once: the hatching slides across, then the shackle drops */
+#dojo .sb-ready .sb-hatch { transform: translateX(101%); transition: transform 1.2s var(--dj-ease) .15s; }
+#dojo .sb-ready .sb-shackle { transform: translateY(-3.4px); transition: transform .55s cubic-bezier(.34, 1.56, .64, 1) 1.05s; }
+#dojo .sb-ready .sb-lock { transform: scale(.86); opacity: .5; transition: transform .6s var(--dj-ease) .9s, opacity .6s var(--dj-ease) .9s; }
+#dojo .sb-ready .sb-g-seal { opacity: .4; transition: opacity .5s var(--dj-ease); transition-delay: calc(.35s + var(--i) * .12s); }
+#dojo .sb-in .sb-hatch, #dojo .sb-in .sb-shackle { transform: none; }
+#dojo .sb-in .sb-lock { transform: none; opacity: 1; }
+#dojo .sb-in .sb-g-seal { opacity: 1; }
+@media (max-width: 760px) {
+  #dojo .sb-grid { grid-template-columns: 1fr; gap: 14px; }
+  #dojo .sb-panel { padding: 20px 20px 22px; }
+  #dojo .sb-list li { font-size: 15px; }
+}
+
+/* print / save as PDF: the census in its final state even if it never scrolled into view */
+@media print {
+  #dojo .fn-ready .fn-bar, #dojo .fn-ready .tl-bar { clip-path: none !important; }
+  #dojo .fn-ready .fn-split, #dojo .fn-ready .fn-link .fn-meta, #dojo .fn-ready .tl-geo { opacity: 1 !important; transform: none !important; }
+  #dojo .fn-ready .fn-link .fn-trap { transform: none !important; }
+  #dojo *, #dojo *::before, #dojo *::after { transition: none !important; animation: none !important; }
+}

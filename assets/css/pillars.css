@@ -1,0 +1,241 @@
+/* pillars: the overview's map of the paper. Three cards (environment, agent, training) joined by a loop of flowing
+ * connectors, each with a small code-drawn illustration, and a detail panel for the active card (pillars.js).
+ * Without JS the cards stand alone as a plain three-column grid. */
+
+#overview .pillars {
+  position: relative;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px;
+}
+#overview .pillars.pl-on { padding: 58px 0 92px; }
+#overview .pillars:not(.pl-on) .pillar-visual { display: none; }
+
+/* ------------------------------------------------------------------ card */
+#overview .pillar {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  padding: 22px 22px 20px;
+  border-radius: var(--rad-lg); background: var(--bg); border: 1px solid var(--line);
+  box-shadow: 0 0 0 0 transparent;
+  transition: transform .6s var(--ease-out), border-color .35s var(--ease), box-shadow .45s var(--ease-out), background-color .4s var(--ease);
+}
+#overview .pl-on .pillar { cursor: pointer; }
+#overview .pl-on .pillar:hover { transform: translateY(-3px); border-color: var(--line-2); box-shadow: var(--shadow-md); }
+#overview .pillar.is-active,
+#overview .pl-on .pillar.is-active:hover { border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue), var(--shadow-md); }
+#overview .pillar-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+#overview .pillar-no {
+  display: inline-grid; place-items: center; min-width: 26px; height: 22px; padding: 0 6px; border-radius: 999px;
+  font-family: var(--mono); font-size: 11.5px; font-weight: 600; letter-spacing: .02em; font-variant-numeric: tabular-nums;
+  color: var(--blue-ink); background: var(--blue-bg);
+  transition: color .35s var(--ease), background-color .35s var(--ease);
+}
+#overview .pillar.is-active .pillar-no { color: var(--on-blue); background: var(--blue-fill); }
+#overview .pillar-role { font-family: var(--mono); font-size: 11.5px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); }
+#overview .pillar-title { font-size: 25px; font-weight: 560; letter-spacing: -.024em; margin: 0; }
+
+/* the illustration panel: grey at rest, the paper's shallow blue when selected */
+#overview .pillar-visual {
+  position: relative; margin: 16px 0 18px; border-radius: var(--rad); background-color: var(--panel);
+  background-image: radial-gradient(var(--dot) .9px, transparent 1.2px); background-size: 12px 12px; background-position: 6px 6px;
+  aspect-ratio: 260 / 150; overflow: hidden;
+  transition: background-color .45s var(--ease);
+}
+#overview .pillar.is-active .pillar-visual { background-color: var(--panel-blue); }
+#overview .pillar-visual svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+#overview .pillar-copy { flex: 1 1 auto; margin: 0 0 16px; font-size: 15.5px; line-height: 1.58; color: var(--ink-2); }
+#overview .pillar-stat {
+  margin: 0 0 14px; padding-top: 14px; border-top: 1px solid var(--line);
+  font-family: var(--mono); font-size: clamp(10.5px, 1.1vw, 12.5px); line-height: 1.5; color: var(--ink-3); font-variant-numeric: tabular-nums;
+  text-wrap: balance;
+}
+#overview .pillar-stat b { font-weight: 600; color: var(--ink); }
+#overview .pillar-link {
+  position: relative; z-index: 3; align-self: flex-start;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 14.5px; font-weight: 550; color: var(--blue-ink); text-decoration: none;
+}
+#overview .pillar-link span { display: inline-block; transition: transform .35s var(--ease-out); }
+#overview .pillar-link:hover span, #overview .pillar-link:focus-visible span { transform: translateX(4px); }
+#overview .pillar-link:hover { text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--blue) 45%, transparent); }
+
+/* the whole card is one button (stretched under the link) */
+#overview .pillar-hit {
+  position: absolute; inset: 0; z-index: 2; margin: 0; padding: 0; border: 0; border-radius: inherit;
+  background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+#overview .pillar-hit:focus-visible { outline: 2px solid var(--blue); outline-offset: 4px; border-radius: calc(var(--rad-lg) + 4px); }
+
+/* the paper's "selected setup" tag, pinned to the card's top edge */
+#overview .pillar-tag {
+  position: absolute; z-index: 3; top: -11px; right: 18px;
+  padding: 2px 10px; border-radius: 999px; background: var(--blue-fill); color: var(--on-blue);
+  font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: .04em; line-height: 18px;
+  opacity: 0; transform: translateY(4px) scale(.94); transform-origin: 100% 50%;
+  transition: opacity .3s var(--ease), transform .5s var(--ease-out);
+  pointer-events: none;
+}
+#overview .pillar.is-active .pillar-tag { opacity: 1; transform: none; }
+
+/* ------------------------------------------------------------------ the loop overlay */
+#overview .pl-loop { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+#overview .pl-path { fill: none; stroke: var(--line-2); stroke-width: 1.2; stroke-dasharray: 1 2; stroke-dashoffset: 0; transition: stroke .45s var(--ease), stroke-dashoffset 1.4s var(--ease-out) .5s; }
+#overview .pl-arrow { fill: none; stroke: var(--ink-4); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; transition: stroke .45s var(--ease); }
+#overview .pl-port { fill: var(--bg); stroke: var(--ink-4); stroke-width: 1.2; transition: stroke .45s var(--ease); }
+#overview .pl-dot { fill: none; stroke: var(--c); stroke-width: 4.4; stroke-linecap: round; stroke-linejoin: round; }
+#overview .pl-plate { fill: var(--bg); transition: fill .4s var(--ease); }
+#overview .pl-label {
+  font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .01em; fill: var(--ink-3);
+  dominant-baseline: central;
+  transition: fill .45s var(--ease);
+}
+#overview .pl-flow.is-hot .pl-path { stroke: color-mix(in srgb, var(--c) 55%, transparent); }
+#overview .pl-flow.is-hot .pl-arrow, #overview .pl-flow.is-hot .pl-port { stroke: var(--c); }
+#overview .pl-flow.is-hot .pl-label { fill: var(--t); font-weight: 600; }
+
+/* ------------------------------------------------------------------ detail panel */
+#overview .pl-detail {
+  position: relative; margin-top: 4px; padding: 26px 30px 22px;
+  border-radius: var(--rad-lg); background: var(--panel);
+}
+#overview .pl-d-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+#overview .pl-d-k { font-family: var(--mono); font-size: 11.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--blue-ink); }
+#overview .pl-d-tabs { display: flex; gap: 6px; }
+#overview .pl-d-tab {
+  display: inline-flex; align-items: center; gap: 8px; padding: 6px 8px; margin: 0; border: 0; border-radius: 999px;
+  background: transparent; cursor: pointer; color: var(--ink-3);
+  font-family: var(--mono); font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums;
+  transition: color .25s var(--ease), background-color .25s var(--ease);
+}
+#overview .pl-d-tab:hover { color: var(--ink); background: var(--panel-2); }
+#overview .pl-d-tab[aria-pressed="true"] { color: var(--blue-ink); }
+#overview .pl-d-bar { position: relative; width: 34px; height: 2px; border-radius: 2px; background: var(--line-2); overflow: hidden; }
+#overview .pl-d-bar i { position: absolute; inset: 0; background: var(--blue); transform: scaleX(0); transform-origin: 0 50%; }
+#overview .pl-d-body {
+  display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 40px; align-items: start;
+  transition: opacity .17s var(--ease), transform .45s var(--ease-out);
+}
+#overview .pl-d-body.pl-out { opacity: 0; transform: translateY(6px); transition-duration: .17s, .17s; }
+#overview .pl-d-title { font-size: 21px; font-weight: 580; letter-spacing: -.016em; margin: 0 0 10px; }
+#overview .pl-d-text { margin: 0 0 14px; font-size: 15.5px; line-height: 1.6; color: var(--ink-2); max-width: 600px; }
+#overview .pl-d-text code { background: var(--bg); }
+#overview .pl-d-link { display: inline-flex; gap: 6px; font-size: 14.5px; font-weight: 550; color: var(--blue-ink); text-decoration: none; }
+#overview .pl-d-link span { transition: transform .35s var(--ease-out); }
+#overview .pl-d-link:hover span, #overview .pl-d-link:focus-visible span { transform: translateX(4px); }
+#overview .pl-d-nums { margin: 0; display: grid; gap: 0; }
+#overview .pl-d-num { display: flex; flex-direction: column-reverse; padding: 12px 0; border-top: 1px solid var(--line-2); }
+#overview .pl-d-num:first-child { border-top: 0; padding-top: 2px; }
+#overview .pl-d-num dd { margin: 0; font-size: 26px; font-weight: 540; letter-spacing: -.03em; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--ink); }
+#overview .pl-d-num:first-child dd { color: var(--blue); }
+#overview .pl-d-num dt { margin-top: 4px; font-size: 13.5px; line-height: 1.4; color: var(--ink-3); text-wrap: pretty; }
+#overview .pl-d-note { margin: 18px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-3); text-wrap: pretty; }
+#overview .pl-d-note .tag-note { margin-right: 10px; vertical-align: 1px; }
+
+/* ------------------------------------------------------------------ mini illustrations: shared marks */
+#overview .pillar-visual text { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+#overview .pv-cap { font-size: 9.5px; font-weight: 500; letter-spacing: .04em; fill: var(--ink-3); }
+#overview .pv-num { font-size: 10.5px; font-weight: 600; fill: var(--ink-2); transition: fill .4s var(--ease); }
+#overview .pv-num-hi { fill: var(--blue-ink); }
+
+/* 01 environment */
+#overview .pv-wall { fill: none; stroke: var(--ink-4); stroke-width: 1.2; stroke-linecap: round; }
+#overview .pv-room { fill: var(--bg); stroke: var(--line-2); stroke-width: 1; }
+#overview .pv-lock rect { fill: var(--ink-3); }
+#overview .pv-lock path { fill: none; stroke: var(--ink-3); stroke-width: 1.4; }
+#overview .pv-pins { fill: none; stroke: var(--violet); stroke-width: 1.4; stroke-linecap: round; }
+#overview .pv-die { fill: var(--violet-bg); stroke: var(--violet); stroke-width: 1.4; }
+#overview .pv-core { fill: var(--violet); opacity: .3; transition: opacity .35s var(--ease); }
+#overview .pv-core.on { opacity: 1; }
+#overview .pv-ring { fill: none; stroke: var(--violet); stroke-width: 1.2; }
+#overview .pv-pr-bg { fill: var(--bg); stroke: var(--line-2); stroke-width: 1; }
+#overview .pv-pr-ln { fill: none; stroke: var(--ink-4); stroke-width: 1.5; stroke-linecap: round; }
+#overview .pv-setup { fill: var(--blue); }
+
+/* 02 agent */
+#overview .pv-cap-b { font-weight: 700; fill: var(--ink-2); }
+#overview .pv-head path { fill: var(--block); }
+#overview .pv-head .pv-spark { fill: var(--bg); }
+#overview .pv-ring-b { fill: none; stroke: var(--blue); stroke-width: 1.6; }
+#overview .pv-track { fill: color-mix(in srgb, var(--ink-4) 18%, transparent); }
+#overview .pv-bar { fill: var(--blue-2); transition: fill .3s var(--ease); }
+#overview .pv-bar.win { fill: var(--blue); }
+#overview .pv-wire { fill: none; stroke: var(--ink-2); stroke-width: 1.3; stroke-linejoin: round; }
+#overview .pv-wire-tip { fill: none; stroke: var(--ink-2); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+#overview .pv-impl rect { fill: var(--block); }
+#overview .pv-impl-t { font-size: 10.5px; font-weight: 700; fill: var(--on-block); letter-spacing: .01em; }
+
+/* 03 training: analyses shaded by policy version, light to dark */
+#overview .pv-pol rect { fill: var(--bg); stroke: var(--blue-2); stroke-width: 1.2; transition: stroke .3s var(--ease), stroke-width .3s var(--ease); }
+#overview .pv-pol.flash rect { stroke: var(--blue); stroke-width: 2.4; }
+#overview .pv-pi { font-family: var(--sans) !important; font-size: 17px; font-style: italic; font-weight: 500; fill: var(--ink); }
+#overview .pv-pi-sub { font-family: var(--mono); font-size: 9.5px; font-style: normal; font-weight: 600; fill: var(--ink-2); }
+#overview .v0 { fill: var(--blue-3); }
+#overview .v1 { fill: var(--blue-2); }
+#overview .v2 { fill: var(--blue); }
+#overview .v3 { fill: var(--blue-deep); }
+#overview .pv-ver { transition: fill .4s var(--ease); }
+#overview .pv-build { fill: var(--block); }
+#overview .pv-meas { fill: var(--violet); }
+#overview .pv-rew { fill: var(--block); }
+#overview .pv-rew.zero { fill: var(--bg); stroke: var(--block); stroke-width: 1.3; }
+#overview .pv-trn rect:first-child { fill: var(--bg); stroke: var(--line-2); stroke-width: 1; }
+#overview .pv-cell { fill: color-mix(in srgb, var(--ink-4) 24%, transparent); transition: fill .25s var(--ease); }
+#overview .pv-cell.on { fill: var(--blue); }
+#overview .pv-cell.on.zero { fill: var(--ink-4); }
+#overview .pv-upd, #overview .pv-upd-tip { fill: none; stroke: color-mix(in srgb, var(--blue) 45%, transparent); stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+#overview .pv-upd-run { fill: none; stroke: var(--blue); stroke-width: 2.2; stroke-linecap: round; }
+#overview .pv-upd-t {
+  dominant-baseline: central; fill: var(--blue-ink);
+  paint-order: stroke; stroke: var(--panel); stroke-width: 6px; stroke-linejoin: round;
+  transition: stroke .45s var(--ease);
+}
+#overview .pillar.is-active .pv-upd-t { stroke: var(--panel-blue); }
+
+/* ------------------------------------------------------------------ entrance: cards rise in turn, then the loop draws in */
+@keyframes pl-rise { from { opacity: 0; transform: translateY(22px); } }
+#overview .pl-pre:not(.pl-in) .pillar { opacity: 0; }
+#overview .pl-pre.pl-in .pillar { animation: pl-rise 1s var(--ease-out) var(--d, 0s) backwards; }
+#overview .pl-pre:not(.pl-in) .pl-path { stroke-dashoffset: 1; }
+#overview .pl-pre .pl-arrow, #overview .pl-pre .pl-port, #overview .pl-pre .pl-label, #overview .pl-pre .pl-plate { opacity: 0; }
+#overview .pl-pre.pl-in .pl-arrow, #overview .pl-pre.pl-in .pl-port, #overview .pl-pre.pl-in .pl-label, #overview .pl-pre.pl-in .pl-plate { opacity: 1; transition: opacity .6s var(--ease) 1.3s, fill .45s var(--ease), stroke .45s var(--ease); }
+
+/* ------------------------------------------------------------------ responsive: cards stack, connectors run vertically */
+@media (max-width: 1080px) {
+  #overview .pillars { gap: 32px; }
+  #overview .pillar { padding: 20px 18px 18px; }
+  #overview .pillar-title { font-size: 23px; }
+  #overview .pillar-copy { font-size: 15px; }
+}
+@media (max-width: 920px) {
+  #overview .pillars { grid-template-columns: minmax(0, 560px); justify-content: center; gap: 30px; }
+  #overview .pillars.pl-on { gap: 76px; padding: 0 0 30px; }
+  #overview .pillar { padding: 22px 22px 20px; }
+  #overview .pillar-visual { max-height: 210px; }
+  #overview .pillar-stat { font-size: 12.5px; }
+  #overview .pl-label { font-size: 10.5px; }
+  #overview .pl-d-body { grid-template-columns: 1fr; gap: 18px; }
+  #overview .pl-d-nums { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  #overview .pl-d-num, #overview .pl-d-num:first-child { border-top: 1px solid var(--line-2); padding: 12px 0 0; }
+}
+@media (max-width: 760px) {
+  #overview .pillar-title { font-size: 22px; }
+  #overview .pl-detail { padding: 20px 20px 18px; }
+  #overview .pl-d-head { flex-direction: column; align-items: flex-start; gap: 12px; }
+  #overview .pl-d-tabs { width: 100%; }
+  #overview .pl-d-tab { flex: 1 1 0; justify-content: flex-start; padding: 6px 4px; }
+  #overview .pl-d-bar { flex: 1 1 auto; width: auto; }
+  #overview .pl-d-nums { grid-template-columns: 1fr; gap: 0; }
+  #overview .pl-d-num, #overview .pl-d-num:first-child { padding: 10px 0; }
+  #overview .pl-d-num dd { font-size: 24px; }
+  #overview .pl-d-title { font-size: 19px; }
+  #overview .pl-d-text { font-size: 15px; }
+}
+
+/* ------------------------------------------------------------------ print: the final state, whatever the entrance had reached */
+@media print {
+  #overview .pl-pre .pillar { opacity: 1 !important; animation: none !important; }
+  #overview .pl-d-body.pl-out { opacity: 1 !important; transform: none !important; }
+  #overview .pillar, #overview .pl-detail { break-inside: avoid; }
+  /* the connectors are placed by script for the screen layout and cannot follow the page's reflow, so print the plain grid */
+  #overview .pl-loop { display: none; }
+  #overview .pillars.pl-on { padding: 0; gap: 30px; }
+}

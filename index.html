@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LMSysDojo: Building Scalable Analytical Agents for Optimizing LLM Serving Systems</title>
+<meta name="description" content="LMSysDojo rebuilds merged vLLM and SGLang performance PRs into reproducible optimization playgrounds on real GPUs, scored against the human expert's fix. Gap analysis lifts a Claude Code agent from 57–60% to 73–83% of the expert's gain; analysis RL trains open analyzers on measured gains.">
+<meta property="og:title" content="LMSysDojo: Building Scalable Analytical Agents for Optimizing LLM Serving Systems">
+<meta property="og:description" content="900 reproducible optimization playgrounds mined from 39,411 merged vLLM and SGLang PRs; gap analysis reaches 73–83% of the expert's gain; analysis RL trains the analyzer on measured gains.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://lmsysdojo.github.io/">
+<meta property="og:image" content="https://lmsysdojo.github.io/assets/img/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lmsysdojo.github.io/assets/img/og.png">
+<link rel="canonical" href="https://lmsysdojo.github.io/">
+<!-- pre-release: reachable by link but kept out of search results; delete this line at launch -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23007FFF'/%3E%3Crect x='6' y='9.5' width='12' height='4' rx='2' fill='%23fff'/%3E%3Crect x='21' y='9.5' width='5' height='4' rx='2' fill='%23fff' opacity='.55'/%3E%3Crect x='6' y='18.5' width='6' height='4' rx='2' fill='%23fff' opacity='.55'/%3E%3Crect x='15' y='18.5' width='11' height='4' rx='2' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:wght@400..700&family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap">
+<script>(function(){try{var t=localStorage.getItem('lmsd-theme');if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content','#0B0D11');}}catch(e){}})();</script>
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/hero.css">
+<link rel="stylesheet" href="assets/css/story.css">
+<link rel="stylesheet" href="assets/css/pillars.css">
+<link rel="stylesheet" href="assets/css/dojo.css">
+<link rel="stylesheet" href="assets/css/gap.css">
+<link rel="stylesheet" href="assets/css/rl.css">
+<link rel="stylesheet" href="assets/css/gallery.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<!-- ============================================================ nav (site.js: .scrolled, scroll-spy) -->
+<nav class="top" aria-label="Site">
+  <div class="row">
+    <a class="brand" href="#top" aria-label="LMSysDojo, back to top">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#007FFF"/><rect x="6" y="9.5" width="12" height="4" rx="2" fill="#fff"/><rect x="21" y="9.5" width="5" height="4" rx="2" fill="#fff" opacity=".55"/><rect x="6" y="18.5" width="6" height="4" rx="2" fill="#fff" opacity=".55"/><rect x="15" y="18.5" width="11" height="4" rx="2" fill="#fff"/></svg>
+      <span>LMSys<b>Dojo</b></span>
+    </a>
+    <div class="nav-links">
+      <a href="#dojo">Environment</a>
+      <a href="#gap">Gap analysis</a>
+      <a href="#rl">Analysis RL</a>
+      <a class="opt" href="#gallery">Gallery</a>
+      <a class="opt" href="#cite">Cite</a>
+    </div>
+    <div class="nav-tools">
+      <!-- TODO: point at the paper PDF / arXiv once public -->
+      <a class="btn btn-primary btn-sm" href="#" data-soon aria-disabled="true">Paper <span class="soon" style="border-color:rgba(255,255,255,.5);color:#fff">soon</span></a>
+      <button class="icon-btn theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Dark mode" title="Dark mode">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7Z"/></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- section rail, shown past the hero (site.js) -->
+<nav class="rail" aria-label="Sections">
+  <a href="#overview"><b>00</b><span>Overview</span></a>
+  <a href="#dojo"><b>01</b><span>LMSysDojo</span></a>
+  <a href="#gap"><b>02</b><span>Gap analysis</span></a>
+  <a href="#rl"><b>03</b><span>Analysis RL</span></a>
+  <a href="#gallery"><b>04</b><span>Gallery</span></a>
+  <a href="#cite"><b>05</b><span>Cite</span></a>
+</nav>
+
+<main id="main" tabindex="-1">
+<!-- ============================================================ section:hero  (owner: assets/js/hero.js, assets/css/hero.css) -->
+<header class="hero" id="top">
+  <canvas class="hero-canvas" aria-hidden="true"></canvas>
+  <div class="hero-veil" aria-hidden="true"></div>
+  <div class="wrap hero-inner">
+    <p class="eyebrow hero-eyebrow">vLLM · SGLang · real GPUs</p>
+    <h1 class="hero-title">
+      <span class="hero-mark">LMSys<b>Dojo</b></span>
+      <span class="hero-sub">Building Scalable Analytical Agents for Optimizing LLM&nbsp;Serving&nbsp;Systems</span>
+    </h1>
+    <ul class="authors" aria-label="Authors">
+      <li>Junyan Cheng<sup>1</sup></li>
+      <li>Xingqi Cui<sup>2</sup></li>
+      <li>Kaiqiang Xu<sup>3</sup></li>
+      <li>Chun-Liang Li<sup>3</sup></li>
+      <li>Tomas Pfister<sup>3</sup></li>
+      <li>Jinsung Yoon<sup>3</sup></li>
+      <li>Rui Meng<sup>3</sup></li>
+    </ul>
+    <p class="affils"><span><sup>1</sup>Dartmouth College</span><span><sup>2</sup>Rice University</span><span><sup>3</sup>Google</span></p>
+    <div class="hero-links">
+      <!-- TODO: replace data-soon placeholders with real links once public -->
+      <a class="btn btn-dark" href="#" data-soon aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 2.8h8.2L19 7.6v13.6H6z"/><path d="M14 2.8v4.9h5M9 12.5h7M9 16h7"/></svg>Paper <span class="soon">soon</span></a>
+      <a class="btn" href="#" data-soon aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 19 19 5M8 5h11v11"/></svg>arXiv <span class="soon">soon</span></a>
+      <a class="btn" href="#" data-soon aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m8.5 7-5 5 5 5M15.5 7l5 5-5 5"/></svg>Code <span class="soon">soon</span></a>
+      <a class="btn" href="#" data-soon aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7.5" ry="3"/><path d="M4.5 6v12c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V6M4.5 12c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3"/></svg>Benchmark <span class="soon">soon</span></a>
+    </div>
+    <p class="hero-tldr">Agents optimize live vLLM and SGLang deployments on real GPUs and are scored against the human expert's merged fix. Predicting each candidate fix's gain <em>before</em> building it, then building only the best of ten checked predictions, lifts a Claude Code agent from <b>57–60%</b> to <b>73–83%</b> of the expert's gain, still with one measurement per item.</p>
+    <a class="hero-scroll" href="#story"><span>Watch an agent find a gap</span><span class="hero-scroll-arrow" aria-hidden="true">↓</span></a>
+  </div>
+</header>
+<!-- /section:hero -->
+
+<!-- ============================================================ section:story  (owner: assets/js/story.js, assets/css/story.css)
+     A pinned, scroll-driven walk through one real playground (vLLM 4696, Appendix F.2). The five steps below are the
+     readable fallback and the captions; story.js draws the stage and switches the active step. -->
+<section class="story" id="story" aria-labelledby="story-title">
+  <div class="story-track">
+    <div class="story-sticky">
+      <div class="wrap story-grid">
+        <div class="story-copy">
+          <p class="eyebrow">A real playground · vLLM 4696</p>
+          <h2 id="story-title" class="story-title">Watch an agent find a gap</h2>
+          <ol class="story-steps">
+            <li class="story-step" data-step="0">
+              <span class="story-step-k">01 · A live deployment</span>
+              <p>vLLM 0.4.2 serves longchat-7b-16k on one H100 with prefix caching on. Four streams, 400 requests, each a 14,800-token shared prefix plus 200 unique tokens. Mean latency: <b>0.758&nbsp;s</b> per request.</p>
+            </li>
+            <li class="story-step" data-step="1">
+              <span class="story-step-k">02 · Locate the gap</span>
+              <p>The analyzer profiles the baseline. The GPU is busy under 40% of the time: the single engine thread spends 55&nbsp;ms per request naming the prompt's 938 blocks, and py-spy puts <b>34.5%</b> of its samples in <code>hash_of_block</code>.</p>
+            </li>
+            <li class="story-step" data-step="2">
+              <span class="story-step-k">03 · Predict the gain</span>
+              <p>Each block re-hashes its whole prefix, so the work grows as O(L²). A microbenchmark gives 54.8 → 0.33&nbsp;ms per request, and a closed-loop model turns that into a number (Little's law reproduces the baseline to the digit). Three independent analyzers predict <b>−25%</b>, <b>−29%</b> and <b>−30.1%</b> E2E.</p>
+            </li>
+            <li class="story-step" data-step="3">
+              <span class="story-step-k">04 · Implement once</span>
+              <p>Only the highest-predicted analysis is built. The implementer chains each block's hash on the previous one and memoises it: O(L²) becomes <b>O(L)</b>.</p>
+            </li>
+            <li class="story-step" data-step="4">
+              <span class="story-step-k">05 · Measure against the expert</span>
+              <p>One deployment on the scoring node: 0.758 → 0.461&nbsp;s. That is <b>1.65×</b> against the expert's 1.29×, a normalized gain of <b>221%</b>.</p>
+            </li>
+          </ol>
+          <p class="story-note">Built from the paper's case study: the predictions of three structured analyses and the measured delivery of attempt 3.</p>
+        </div>
+        <div class="story-stage" data-mount="story" aria-hidden="true"></div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /section:story -->
+
+<!-- ============================================================ section:overview  (owner: assets/js/pillars.js, assets/css/pillars.css) -->
+<section class="sec overview" id="overview" aria-labelledby="overview-title">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <p class="eyebrow">Overview</p>
+      <h2 id="overview-title">An environment, an agent, and a&nbsp;way&nbsp;to&nbsp;train&nbsp;it</h2>
+      <p class="lede">LMSysDojo has three parts that close one loop. The <b>environment</b> turns real performance PRs into reproducible playgrounds with measured, expert-calibrated rewards. <b>Gap analysis</b> is an agent that predicts a fix's gain before building it. <b>Analysis RL</b> trains the analyzer on the gains those playgrounds measure.</p>
+    </div>
+    <div class="pillars" data-mount="pillars">
+      <article class="pillar" data-pillar="0">
+        <div class="pillar-top"><span class="pillar-no">01</span><span class="pillar-role">Environment</span></div>
+        <h3 class="pillar-title">LMSysDojo</h3>
+        <div class="pillar-visual" aria-hidden="true"></div>
+        <p class="pillar-copy">Reproducible optimization playgrounds rebuilt from merged vLLM and SGLang performance PRs, scored against the human expert's fix on real GPUs.</p>
+        <p class="pillar-stat"><b>39,411</b> PRs → <b>900</b> setups → <b>100</b> items</p>
+        <a class="pillar-link" href="#dojo">Explore the environment <span aria-hidden="true">→</span></a>
+      </article>
+      <article class="pillar" data-pillar="1">
+        <div class="pillar-top"><span class="pillar-no">02</span><span class="pillar-role">Agent</span></div>
+        <h3 class="pillar-title">Gap analysis</h3>
+        <div class="pillar-visual" aria-hidden="true"></div>
+        <p class="pillar-copy">An analyzer locates a bottleneck, proposes a mechanism and predicts its gain before an implementer builds it. Selecting, structuring and checking that prediction turns analysis into a scaling axis.</p>
+        <p class="pillar-stat"><b>57–60%</b> → <b>73–83%</b> of the expert's gain</p>
+        <a class="pillar-link" href="#gap">Explore gap analysis <span aria-hidden="true">→</span></a>
+      </article>
+      <article class="pillar" data-pillar="2">
+        <div class="pillar-top"><span class="pillar-no">03</span><span class="pillar-role">Training</span></div>
+        <h3 class="pillar-title">Analysis RL</h3>
+        <div class="pillar-visual" aria-hidden="true"></div>
+        <p class="pillar-copy">Every playground returns a measured, checked reward. Analysis RL trains only the analyzer on those gains, on an asynchronous infrastructure built for 42-minute rewards.</p>
+        <p class="pillar-stat"><b>4.7×</b> groups/hour · RL <b>9B</b> = untrained <b>27B</b> at <i>K</i>&nbsp;=&nbsp;8</p>
+        <a class="pillar-link" href="#rl">Explore analysis RL <span aria-hidden="true">→</span></a>
+      </article>
+    </div>
+  </div>
+</section>
+<!-- /section:overview -->
+
+<!-- ============================================================ section:dojo  (owner: assets/js/dojo.js, assets/css/dojo.css) -->
+<section class="sec" id="dojo" aria-labelledby="dojo-title">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <h2 id="dojo-title"><span class="sec-no">01 · Environment</span>Playgrounds rebuilt from real performance&nbsp;PRs</h2>
+      <p class="lede">A serving system's speed depends jointly on engine code, hardware, model and workload, and engines like vLLM and SGLang are already heavily optimized: most configurations offer little headroom. <b>LMSysDojo</b> mines the engines' development history for setups with known headroom and an expert's measured fix to score against.</p>
+    </div>
+
+    <div class="stats" data-reveal>
+      <div class="stat"><div class="n blue"><span data-count="1.77" data-decimals="2">1.77</span><small>×</small></div><div class="l">expert E2E speedup over the benchmark, geometric mean</div></div>
+      <div class="stat"><div class="n">1–8</div><div class="l">H100 GPUs per item, dense, MoE and vision-language models</div></div>
+      <div class="stat"><div class="n"><span data-count="1.5" data-decimals="1">1.5</span><small>h</small></div><div class="l">agent wall-clock budget, one final patch per item</div></div>
+      <div class="stat"><div class="n">5</div><div class="l">serving metrics: E2E, TTFT, ITL, output tokens/s, requests/s</div></div>
+    </div>
+
+    <figure class="fig" style="margin-top:56px" data-reveal>
+      <div class="fig-frame">
+        <img src="assets/img/fig/teaser-2400.webp" srcset="assets/img/fig/teaser-1200.webp 1200w, assets/img/fig/teaser-2400.webp 2400w" sizes="(max-width: 1240px) 100vw, 1180px" width="2400" height="1194" loading="lazy" decoding="async" data-zoom data-zoom-src="assets/img/fig/teaser-2400.webp" alt="The LMSysDojo pipeline: a playground constructor scans, segments, parses, measures and profiles merged PRs; each PR becomes a playground whose problem and fix stay sealed; an evaluation environment runs the agent in a sandbox on a Slurm GPU node, checks validity, and scores its normalized gain.">
+        <button class="zoom-btn" type="button" data-zoom-src="assets/img/fig/teaser-2400.webp" data-zoom-alt="The LMSysDojo pipeline">Zoom ⤢</button>
+      </div>
+      <figcaption><b>The LMSysDojo pipeline.</b> Top: the playground constructor scans the merged PRs of vLLM and SGLang, segments each performance PR into the commits before and after the expert's patch, parses only its deployment setup into a setup card, an engine configuration and a GuideLLM workload, then measures the expert's speedup and profiles the baseline on your hardware. Middle: each PR becomes a playground; its problem statement and fix stay sealed. Bottom: the evaluation environment runs the agent in an interaction sandbox on a Slurm-allocated GPU node, checks its delivery, and scores its normalized gain.</figcaption>
+    </figure>
+
+    <h3 class="sub" data-reveal>Scored against the expert</h3>
+    <div class="split dojo-gain" data-reveal>
+      <div>
+        <p class="sub-lede" style="margin-top:0">Each item fixes the system (the engine at a pre-PR commit with its launch configuration), the workload and hardware, and the expert's merged patch. A patch is graded by how much of the expert's improvement it recovers:</p>
+        <div class="formula" role="math" aria-label="normalized gain equals speedup of the patch minus one, over speedup of the expert's fix minus one">
+          <span class="f-lhs">normalized gain</span><span class="f-eq">=</span>
+          <span class="f-frac"><span class="f-num">speedup of the patch − 1</span><span class="f-den">speedup of the expert's fix − 1</span></span>
+        </div>
+        <p class="cap" style="margin-top:16px">0% is no change, 100% matches the expert, and anything above 100% beats the expert. Any valid improvement counts, even in different files: the expert sets the scale, not a ceiling (item gains are capped at 3× the expert's gain for stability).</p>
+      </div>
+      <div class="gain-widget" data-mount="gain-widget"></div>
+    </div>
+
+    <h3 class="sub" data-reveal>Four properties</h3>
+    <div class="grid4 props" data-reveal>
+      <div class="box card"><h4><span class="idx">01</span>Reference-calibrated</h4><p>Every playground is anchored to a merged optimization PR whose gain we re-measure, so each patch is graded against that expert on the same hardware.</p></div>
+      <div class="box card"><h4><span class="idx">02</span>Reusable, diverse setups</h4><p>900 measured setups across serving subsystems, each with a setup card, launch configuration, expert trace and baseline profiles.</p></div>
+      <div class="box card"><h4><span class="idx">03</span>Unified setup and metrics</h4><p>Every playground drives the live server with GuideLLM and records E2E latency, TTFT, ITL, output tokens/s and requests/s.</p></div>
+      <div class="box card"><h4><span class="idx">04</span>Refreshable and sealed</h4><p>New upstream PRs enter by merge date for temporal splits, while the expert fix, commit hash and git history stay sealed away.</p></div>
+    </div>
+
+    <h3 class="sub" data-reveal>From 39,411 PRs to 100 benchmark items</h3>
+    <p class="sub-lede" data-reveal>Only 2.3% of merged PRs are documented, reconstructable optimizations, and finding headroom without them is hard: when agents chose the model, workload and launch configuration on pinned releases, none of 150 attempts beat the 1.075× noise floor. Filtering the 900 setups for clean measurement and headroom, then keeping every qualifying post-cutoff item and a stratified sample of earlier ones, yields LMSysDojo-100: dense, MoE and vision-language models across all major subsystems, split into a dev set and two held-out sets merged before and after Opus 5's knowledge cutoff (2026-05-01).</p>
+    <div class="funnel" data-mount="funnel" data-reveal>
+      <ol class="funnel-fallback">
+        <li><b>39,411</b> merged PRs scanned (vLLM 20,969 · SGLang 18,442)</li>
+        <li><b>900</b> measured setups (607 · 293)</li>
+        <li><b>100</b> benchmark items (76 · 24): dev 30, held-out pre-cutoff 35, held-out post-cutoff 35</li>
+      </ol>
+    </div>
+    <div class="composition" data-mount="composition" data-reveal></div>
+    <p class="paper-figs" data-reveal>Paper figure: <a class="paper-fig" href="assets/img/chart/f-dojo-summary.webp" target="_blank" rel="noopener" data-zoom-src="assets/img/chart/f-dojo-summary.webp" data-zoom-alt="The LMSysDojo-100 benchmark composition (paper figure)">Benchmark composition ↗</a></p>
+
+    <h3 class="sub" data-reveal>What the agent sees, and what stays sealed</h3>
+    <p class="sub-lede" data-reveal>The PR is used only offline. <em>From the agent's view, it is simply optimizing a standalone serving deployment.</em></p>
+    <div class="sandbox" data-mount="sandbox" data-reveal>
+      <div class="grid2">
+        <div class="card-blue">
+          <span class="note-title">Visible in the sandbox</span>
+          <ul>
+            <li>Baseline source and environment</li>
+            <li>Setup card: deployment configuration and a brief scenario theme</li>
+            <li>Pre-recorded profiles: PyTorch profiler, nsys, py-spy</li>
+            <li>The node's GPUs and a local benchmark script</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="note-title" style="color:var(--ink-3)">Sealed away</span>
+          <ul>
+            <li>PR text and discussion</li>
+            <li>Commit hashes and git history (repacked into one commit)</li>
+            <li>The expert's fix, and any hint about the gap</li>
+            <li>Internet access; every tool call and file read is audited</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="checker grid3" data-reveal>
+      <div class="box"><h4><span class="idx">Check</span>Same work</h4><p>Static checks reject launch-flag or environment changes; request-bound runs must match the baseline's request count within 5%.</p></div>
+      <div class="box"><h4><span class="idx">Check</span>Same outputs</h4><p>Greedy decoding on 100 fixed prompts must match the first 32 tokens, with top-5 log-probabilities within 0.01.</p></div>
+      <div class="box"><h4><span class="idx">Score</span>One measurement</h4><p>The validated patch is deployed once on a separate single-tenant node under the full benchmark. One final patch per item.</p></div>
+    </div>
+  </div>
+</section>
+<!-- /section:dojo -->
+
+<!-- ============================================================ section:gap  (owner: assets/js/gap.js, assets/css/gap.css) -->
+<section class="sec" id="gap" aria-labelledby="gap-title">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <h2 id="gap-title"><span class="sec-no">02 · Agent</span>Gap analysis: predict the gain before&nbsp;building&nbsp;it</h2>
+      <p class="lede">A single Claude Code agent on Opus 5 reaches 57% and 60% of the expert's gain on the two held-out splits. In one session it entangles diagnosis with implementation, committing early to one hypothesis with no quantitative way to compare alternatives before its single measurement. Systems researchers argue differently: across 50 recent LLM serving papers, the justification follows one structure.</p>
+    </div>
+    <blockquote class="insight" data-reveal><b>Locate the gap, find a fix, predict the gain.</b> Inspect the profiles to locate where the deployment loses performance; design a mechanism that removes wasted work or spends a resource with headroom to relieve the bottleneck; and predict the mechanism's gain from measured profile quantities, experimental evidence and stated assumptions, independently of how the code is implemented.</blockquote>
+
+    <figure class="fig" style="margin-top:48px" data-reveal>
+      <div class="fig-frame">
+        <img src="assets/img/fig/main-2400.webp" srcset="assets/img/fig/main-1200.webp 1200w, assets/img/fig/main-2400.webp 2400w" sizes="(max-width: 1240px) 100vw, 1180px" width="2400" height="692" loading="lazy" decoding="async" data-zoom data-zoom-src="assets/img/fig/main-2400.webp" alt="LMSysDojo and gap analysis at a glance: diverse real-world setups as playgrounds; parallel analyzers each predict a gain and only the highest-predicted mechanism is implemented; the patch is scored by normalized gain against the expert.">
+        <button class="zoom-btn" type="button" data-zoom-src="assets/img/fig/main-2400.webp" data-zoom-alt="LMSysDojo and gap analysis at a glance">Zoom ⤢</button>
+      </div>
+      <figcaption><b>At a glance.</b> Left: real serving setups rebuilt from merged PRs serve as playgrounds. Middle: parallel gap analysis runs independent analyzers; each locates a gap, proposes a mechanism and predicts its gain, and only the highest-predicted mechanism is implemented. Right: the patch is scored by its normalized gain against the expert's fix on the same setup.</figcaption>
+    </figure>
+
+    <h3 class="sub" data-reveal>Why focus on the analysis</h3>
+    <div class="split" data-reveal>
+      <div>
+        <p class="sub-lede" style="margin-top:0">An <b>analyzer</b> locates the gap, explains why it costs that much, proposes a mechanism and predicts its gain, then its code changes are discarded. A separate <b>implementer</b> builds the mechanism from the analysis alone. Re-running only the implementer on a fixed analysis barely changes an item's outcome, and a smaller analyzer hurts far more than a smaller implementer. Search effort pays at the analysis.</p>
+      </div>
+      <div class="variance" data-mount="variance">
+        <div class="stats" style="border:0">
+          <div class="stat"><div class="n blue">97–98%</div><div class="l">less squared median spread when the analysis is held fixed</div></div>
+          <div class="stat"><div class="n">0.010 <small>vs</small> 0.067</div><div class="l">within-item std. of log speedup, implementer only vs. whole pipeline</div></div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="sub" data-reveal>Parallel: select on the prediction</h3>
+    <p class="sub-lede" data-reveal>Run <i>K</i> independent analyzers, implement only the highest predicted gain, and measure once. A single agent offers no such signal: even an LLM ranker over ten finished patches stays near the single-run mean, and chaining sessions serializes latency to O(<i>K</i>) where parallel analysis stays O(1).</p>
+    <div class="parallel" data-mount="parallel" data-reveal></div>
+    <p class="paper-figs" data-reveal>Paper figure: <a class="paper-fig" href="assets/img/chart/f-results.webp" target="_blank" rel="noopener" data-zoom-src="assets/img/chart/f-results.webp" data-zoom-alt="Gap analysis on the 70 held-out items (paper figure)">Gap analysis on the held-out items ↗</a></p>
+
+    <h3 class="sub" data-reveal>Structured: a prediction you can trace</h3>
+    <p class="sub-lede" data-reveal>The analyzer ships its prediction as a deterministic program, <code>analyze(C, E, A)</code>: SQL queries over the baseline profiles (<span class="pc-C">C</span>), its own experimental evidence (<span class="pc-E">E</span>), and stated assumptions with a value and a reason (<span class="pc-A">A</span>). Any other number counts as undeclared, and every input can be traced and perturbed.</p>
+    <div class="provenance" data-mount="provenance" data-reveal></div>
+
+    <h3 class="sub" data-reveal>Iterative: check, then refine</h3>
+    <p class="sub-lede" data-reveal>Before anything is built, a <b>sensitivity check</b> perturbs the program's inputs, and an <b>assumption audit</b>, a read-only agent session, checks each stated assumption against the code and profiles. A rejected analysis goes back to a fresh analyzer with the findings, up to three times; the checks reject 48% of held-out candidates, which deliver 1.22× against 1.78× for those that pass.</p>
+    <div class="iterative" data-mount="iterative" data-reveal></div>
+
+    <p class="paper-figs" data-reveal>Paper figure: <a class="paper-fig" href="assets/img/fig/method-2400.webp" target="_blank" rel="noopener" data-zoom-src="assets/img/fig/method-2400.webp" data-zoom-alt="Structured and iterative gap analysis (paper figure)">Structured and iterative gap analysis ↗</a></p>
+
+    <h3 class="sub" data-reveal>Results</h3>
+    <p class="sub-lede" data-reveal>Normalized gain on the held-out splits of LMSysDojo-100 with <code>claude-opus-5</code> on Claude Code; every method is charged one final deployed measurement per item.</p>
+    <div class="results" data-mount="results" data-reveal>
+      <div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr><th>Setup</th><th class="n">Pre-cutoff E2E</th><th class="n">Post-cutoff E2E</th></tr></thead>
+          <tbody>
+            <tr><td>Vanilla</td><td class="n">57.0</td><td class="n">60.1</td></tr>
+            <tr><td class="ind1">+ ranker</td><td class="n">58.3</td><td class="n">65.6</td></tr>
+            <tr><td>Gap analysis</td><td class="n">55.1</td><td class="n">62.2</td></tr>
+            <tr><td class="ind1">+ parallel</td><td class="n">64.7</td><td class="n">73.2</td></tr>
+            <tr><td>Structured gap analysis</td><td class="n">64.6</td><td class="n">62.1</td></tr>
+            <tr><td class="ind1">+ parallel</td><td class="n">70.7</td><td class="n">77.3</td></tr>
+            <tr class="hl"><td class="ind2">+ iterative</td><td class="n best">73.1</td><td class="n best">82.7</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="sub" data-reveal>Analysis-time scaling reaches the human expert</h3>
+    <p class="sub-lede" data-reveal>Still implementing and measuring a single winner, scaling to <i>K</i> = 50 analyses per item on the post-cutoff split lifts all three variants from 62–64% to the expert's level. Auditing before selection resists the optimizer's curse, where one over-claimed estimate hijacks a large pool: iterative gap analysis crosses the human fix by <i>K</i> = 40 and reaches 103.8% at <i>K</i> = 50.</p>
+    <div class="k50" data-mount="k50" data-reveal></div>
+    <p class="paper-figs" data-reveal>Paper figure: <a class="paper-fig" href="assets/img/chart/f-k50-post.webp" target="_blank" rel="noopener" data-zoom-src="assets/img/chart/f-k50-post.webp" data-zoom-alt="Analysis-time scaling up to K = 50 (paper figure)">Analysis-time scaling to <i>K</i>&nbsp;=&nbsp;50 ↗</a></p>
+    <p class="cap" data-reveal style="margin-top:20px">The same progression holds across model families: on the Antigravity CLI, structured gap analysis with parallel selection adds +7.0 E2E points for Gemini 3.1 Pro and +8.3 for Gemini 3.8 Flash over the single agent on the post-cutoff split.</p>
+  </div>
+</section>
+<!-- /section:gap -->
+
+<!-- ============================================================ section:rl  (owner: assets/js/rl.js, assets/css/rl.css) -->
+<section class="sec" id="rl" aria-labelledby="rl-title">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <h2 id="rl-title"><span class="sec-no">03 · Training</span>Analysis RL: train the analyzer on measured&nbsp;gains</h2>
+      <p class="lede">Every playground returns a measured, checked speedup, so LMSysDojo can also train agents. As the whole solver, an untrained open model gives GRPO nothing to learn from. <b>Analysis RL</b> trains only the analyzer, where outcome variance concentrates, while a frozen <code>claude-opus-5</code> implementer builds each analysis as written.</p>
+    </div>
+    <div class="rl-signal" data-mount="rl-signal" data-reveal>
+      <div class="grid2">
+        <div class="card"><span class="note-title" style="color:var(--ink-3)">Whole solver · Qwen3.8-27B</span><p>Delivered a patch in only 15 of 268 attempts, and no item showed the reward spread that GRPO learns from.</p></div>
+        <div class="card-blue"><span class="note-title">Analyzer only · Qwen3.5-9B</span><p>64% of rollouts deliver a patch and 67% fall in groups with reward spread.</p></div>
+      </div>
+    </div>
+    <p class="paper-figs" data-reveal>Paper figure: <a class="paper-fig" href="assets/img/chart/f-rl-roles.webp" target="_blank" rel="noopener" data-zoom-src="assets/img/chart/f-rl-roles.webp" data-zoom-alt="Why train the analyzer (paper figure)">Why train the analyzer ↗</a></p>
+
+    <h3 class="sub" data-reveal>Three infrastructure challenges, each with its fix</h3>
+    <p class="sub-lede" data-reveal>Training on measured rewards runs into three problems. As the whole solver, an untrained model times out in 76% of attempts, and none of its groups has reward spread. Serving the policy, training it and measuring its deliveries draw on the same 112 GPUs, and the demand among them keeps shifting. And each reward takes a median of 42 minutes from rollout start to measurement end (32 to 63 from the 10th to the 90th percentile): 4.5 minutes of staging, a 20-minute, 144-turn analysis, a 5-minute build by the frozen implementer, a 5-minute measurement on a GPU, and the waits between them. Analysis RL, elastic nodes and asynchronous execution address them in turn.</p>
+    <div class="rl-pipeline" data-mount="rl-pipeline" data-reveal></div>
+    <p class="paper-figs" data-reveal>Paper figures: <a class="paper-fig" href="assets/img/fig/agenticrl-design-2400.webp" target="_blank" rel="noopener" data-zoom-src="assets/img/fig/agenticrl-design-2400.webp" data-zoom-alt="Training agents in LMSysDojo: the three challenges and their fixes (paper figure)">Training agents in LMSysDojo ↗</a><a class="paper-fig" href="assets/img/fig/agenticrl-infra-2400.webp" target="_blank" rel="noopener" data-zoom-src="assets/img/fig/agenticrl-infra-2400.webp" data-zoom-alt="Asynchronous RL on LMSysDojo (paper figure)">Asynchronous streaming ↗</a><a class="paper-fig" href="assets/img/fig/agenticrl-fleet-2400.webp" target="_blank" rel="noopener" data-zoom-src="assets/img/fig/agenticrl-fleet-2400.webp" data-zoom-alt="Fleet management and elastic nodes (paper figure)">Elastic fleet ↗</a></p>
+
+    <div class="stats" style="margin-top:40px" data-reveal>
+      <div class="stat"><div class="n blue"><span data-count="4.7" data-decimals="1">4.7</span><small>×</small></div><div class="l">groups trained per hour vs. a synchronous loop</div></div>
+      <div class="stat"><div class="n" data-count="384">384</div><div class="l">seats for concurrent analysis sessions on CPU workers</div></div>
+      <div class="stat"><div class="n" data-count="16">16</div><div class="l">data-parallel policy replicas</div></div>
+      <div class="stat"><div class="n"><span data-count="97">97</span><small>%</small></div><div class="l">prefix-cache hit rate with cache-aware routing</div></div>
+      <div class="stat"><div class="n"><span data-count="48">48</span><small>s</small></div><div class="l">to load new weights into running servers</div></div>
+    </div>
+
+    <h3 class="sub" data-reveal>Reward and objective</h3>
+    <div class="grid3 rl-recipe" data-reveal>
+      <div class="box card"><h4><span class="idx">Reward</span>Measured, never predicted</h4><p>The median log speedup over E2E, TTFT and ITL, clipped to [−1, 2]; zero for an invalid patch or a build that departs from the analysis. The predicted gain never enters the reward, so over-claiming cannot raise it.</p></div>
+      <div class="box card"><h4><span class="idx">Objective</span>GRPO on groups of eight</h4><p>Full-parameter GRPO on eight analyses per item: a step takes 24 groups, at least 8 of them valid (rewards spread by at least 0.03), with a leave-one-out advantage and a truncated importance weight for policy lag. No KL term or reference model.</p></div>
+      <div class="box card"><h4><span class="idx">Fleet</span>Elastic, never released</h4><p>Every GPU node stays held by a long-lived job and changes role inside its allocation: a measurement-pool node drains to join a training step, then returns.</p></div>
+    </div>
+    <div class="rl-throughput" data-mount="rl-throughput" data-reveal></div>
+    <p class="paper-figs" data-reveal>Paper figure: <a class="paper-fig" href="assets/img/chart/f-rl-throughput.webp" target="_blank" rel="noopener" data-zoom-src="assets/img/chart/f-rl-throughput.webp" data-zoom-alt="Throughput against a synchronous loop (paper figure)">Throughput against a synchronous loop ↗</a></p>
+
+    <h3 class="sub" data-reveal>A 9B analyzer that matches an untrained one three times its size</h3>
+    <p class="sub-lede" data-reveal>Trained on 100 one-GPU corpus items disjoint from the benchmark, a <code>Qwen3.5-9B</code> analyzer improves on LMSysDojo-100, which training never sees, at every <i>K</i> on both splits: on held-out items from 7.4% to 16.3% of the expert's gain at <i>K</i> = 8, matching an untrained <code>Qwen3.5-27B</code> of the same family three times its size. RL and parallel selection compound: selecting among eight analyses adds 5.9 points for the base analyzer and 12.2 for the trained one.</p>
+    <div class="grid2 rl-results-grid" data-reveal>
+      <div class="rl-results" data-mount="rl-results">
+        <div class="tbl-scroll"><table class="tbl"><thead><tr><th>Analyzer (held-out)</th><th class="n"><i>K</i>=1</th><th class="n">2</th><th class="n">4</th><th class="n">8</th></tr></thead><tbody>
+          <tr class="gray"><td>Qwen3.5-27B, untrained</td><td class="n">5.6</td><td class="n">7.3</td><td class="n">11.6</td><td class="n">16.3</td></tr>
+          <tr><td>Qwen3.5-9B, untrained</td><td class="n">1.5</td><td class="n">2.4</td><td class="n">4.8</td><td class="n">7.4</td></tr>
+          <tr class="hl"><td>Qwen3.5-9B + analysis RL</td><td class="n">4.1</td><td class="n">7.2</td><td class="n">11.5</td><td class="n best">16.3</td></tr>
+        </tbody></table></div>
+      </div>
+      <div class="rl-train" data-mount="rl-train"></div>
+    </div>
+    <p class="paper-figs" data-reveal>Paper figure: <a class="paper-fig" href="assets/img/chart/f-rl-train.webp" target="_blank" rel="noopener" data-zoom-src="assets/img/chart/f-rl-train.webp" data-zoom-alt="Analysis RL training (paper figure)">Analysis RL training ↗</a></p>
+
+  </div>
+</section>
+<!-- /section:rl -->
+
+<!-- ============================================================ section:gallery  (owner: assets/js/gallery.js, assets/css/gallery.css) -->
+<section class="sec sec-soft" id="gallery" aria-labelledby="gallery-title">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <h2 id="gallery-title"><span class="sec-no">04 · Gallery</span>Mechanisms the agents&nbsp;found</h2>
+      <p class="lede">Across methods, <b>35–38%</b> of delivered attempts exceed the expert's gain, and 22–27% of patches that touch no expert-modified file still beat the expert. Agents win both by resolving a different bottleneck and by building a stronger fix for the same one. Every case below is a real delivery from the main run.</p>
+    </div>
+    <div class="walkthrough" data-mount="walkthrough" data-reveal>
+      <h3 class="sub">Two deliveries, end to end</h3>
+      <p><b>SGLang 8940.</b> LoRA kernels tile the token axis at 16 rows but a decode segment is one row, so 15/16 of every tile is masked and the single adapter is re-read once per sequence. Describing the batch as one segment delivers 1.78× E2E against the expert's 1.22×, although the analysis sized it at only −1.7%.</p>
+      <p><b>vLLM 41868.</b> The FP8 dispatcher falls back to a slow Triton GEMM because the vision MLP width, 3420, is not a multiple of 16. Padding to 16 puts it back on CUTLASS: 2.72× E2E against the expert's 2.27× for the same diagnosis; a short local probe predicted −59.1% and the delivery measured −63.2%.</p>
+    </div>
+    <div class="gallery" data-mount="gallery" data-reveal>
+      <h3 class="sub">Seven mechanisms in three recurring classes</h3>
+      <ul>
+        <li>vLLM 4696, chain the prefix-cache hashes: agent 1.65×, expert 1.29×</li>
+        <li>vLLM 3469, incremental prompt-logprob detokenisation: agent 8.45×, expert 8.97×</li>
+        <li>vLLM 44212, stop re-scanning finished images: agent 1.87×, expert 1.78×</li>
+        <li>SGLang 8940, one segment for a one-adapter batch: agent 1.78×, expert 1.22×</li>
+        <li>vLLM 12185, dequantise MoE experts once: agent 2.35×, expert 1.90×</li>
+        <li>vLLM 16725, bring back the grammar cache: agent 6.44×, expert 7.12×</li>
+        <li>vLLM 14223, validate the generation config once: agent 17.2×, expert 17.0×</li>
+        <li>vLLM 41868, vision-tower FP8 GEMMs padded onto CUTLASS (end to end): agent 2.72×, expert 2.27×</li>
+      </ul>
+    </div>
+    <div class="failures" data-mount="failures" data-reveal>
+      <h3 class="sub">What an analysis can get wrong</h3>
+      <p>Right mechanism, wrong size (SGLang 8940); premise refuted at implementation (SGLang 10286, vLLM 48144, vLLM 44858); wrong target (vLLM 41992). In each case the implementer's own measurement or reading caught the error before delivery.</p>
+    </div>
+  </div>
+</section>
+<!-- /section:gallery -->
+
+<!-- ============================================================ release + cite -->
+<section class="sec" id="cite" aria-labelledby="cite-title">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <p class="eyebrow">Release</p>
+      <h2 id="cite-title">Toolkit, benchmark, corpus, infrastructure, model</h2>
+      <p class="lede">We will release the LMSysDojo toolkit, the LMSysDojo-100 benchmark, the 900-setup corpus, the RL infrastructure and the RL-trained analyzer.</p>
+    </div>
+    <div class="release" data-reveal>
+      <div class="item"><span class="kicker">Toolkit</span><h3>LMSysDojo</h3><p>Playground constructor, sandbox, checker and scorer.</p><span class="soon">soon</span></div>
+      <div class="item"><span class="kicker">Benchmark</span><h3>LMSysDojo-100</h3><p>100 items with dev and temporal held-out splits.</p><span class="soon">soon</span></div>
+      <div class="item"><span class="kicker">Corpus</span><h3>900 measured setups</h3><p>Setup cards, configurations, expert traces and baseline profiles.</p><span class="soon">soon</span></div>
+      <div class="item"><span class="kicker">Infrastructure</span><h3>Asynchronous RL</h3><p>Streaming rollouts, elastic fleet and in-place weight loading.</p><span class="soon">soon</span></div>
+      <div class="item"><span class="kicker">Model</span><h3>RL-trained analyzer</h3><p>Qwen3.5-9B trained with analysis RL.</p><span class="soon">soon</span></div>
+    </div>
+
+    <h3 class="sub" data-reveal style="margin-top:88px">Citation</h3>
+    <div class="bib" data-reveal>
+      <!-- TODO: update venue / arXiv id once public -->
+      <pre id="bibtex" tabindex="0" role="region" aria-label="BibTeX citation">@article{cheng2026lmsysdojo,
+  title   = {{LMSysDojo}: Building Scalable Analytical Agents for Optimizing {LLM} Serving Systems},
+  author  = {Cheng, Junyan and Cui, Xingqi and Xu, Kaiqiang and Li, Chun-Liang and Pfister, Tomas and Yoon, Jinsung and Meng, Rui},
+  journal = {arXiv preprint},
+  year    = {2026}
+}</pre>
+      <button class="btn btn-sm copy" type="button" data-copy="#bibtex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2.5"/><path d="M15.5 8.5V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7.5a2 2 0 0 0 2 2h2.5"/></svg><span>Copy</span></button>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <div class="wrap row">
+    <span>LMSys<b style="color:var(--blue)">Dojo</b> · Dartmouth College · Rice University · Google</span>
+    <span><a href="#top">Back to top ↑</a></span>
+  </div>
+</footer>
+
+<script src="assets/js/data.js" defer></script>
+<script src="assets/js/cases.js" defer></script>
+<script src="assets/js/site.js" defer></script>
+<script src="assets/js/charts.js" defer></script>
+<script src="assets/js/hero.js" defer></script>
+<script src="assets/js/story.js" defer></script>
+<script src="assets/js/pillars.js" defer></script>
+<script src="assets/js/dojo.js" defer></script>
+<script src="assets/js/gap.js" defer></script>
+<script src="assets/js/rl.js" defer></script>
+<script src="assets/js/gallery.js" defer></script>
+</body>
+</html>
