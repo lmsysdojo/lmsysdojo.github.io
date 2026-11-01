@@ -35,25 +35,44 @@
     var EX = { agent: 1.21, expert: 1.35 };   /* Fig. 1's example: agent +21%, expert +35% (the gain calculator's preset) */
     var GAIN = Math.round((EX.agent - 1) / (EX.expert - 1) * 100);
 
-    /* ---------------------------------------------------------------- the eight beats */
+    /* ---------------------------------------------------------------- the eight beats
+       cap: one sentence to read while the beat plays (about 20 words at most); sr: the full account, for screen readers */
+    var X1 = EX.agent.toFixed(2), XR = EX.expert.toFixed(2);
     var BEATS = [
-      { name: 'Scan', dur: 5.2, cap: 'Agents read every merged PR of vLLM and SGLang, <b>' + UI.fmt(CORPUS.total) + '</b> in all (' + UI.fmt(CORPUS.vllm) + ' and ' + UI.fmt(CORPUS.sglang) + '), and keep the performance PRs: complete fixes that claim a measured speedup on serving work. Bug fixes, refactors and PRs that never merged are skipped.' },
-      { name: 'Segment', dur: 4.4, cap: 'The kept PR becomes a pair of commits: the <b>reference</b>, the commit that landed with the expert’s patch, and the <b>baseline</b>, its parent from before the patch.' },
-      { name: 'Seal & parse', dur: 5.0, cap: 'The PR’s problem statement and fix are <b>sealed</b> away. Only its deployment setup is parsed: a setup card with the environment lock, the engine configuration <i>S</i> and the GuideLLM workload <i>W</i>.' },
-      { name: 'Measure', dur: 5.6, cap: 'On the target GPUs, GuideLLM runs the same workload against both commits, and the baseline is profiled with nsys, the PyTorch profiler and py-spy. The expert’s measured speedup becomes the reference <b><i>R</i></b> (' + EX.expert.toFixed(2) + '× in Fig. 1’s example).' },
-      { name: 'Playground', dur: 4.6, cap: 'The PR is now a <b>sealed playground</b>: the agent will get the configs and profiles, while the expert’s fix, its commits and the sealed runs stay in <code>oracle/</code>. It joins the playgrounds built from other PRs and is selected for a run.' },
-      { name: 'Sandbox', dur: 5.6, cap: 'In the interaction sandbox the agent optimizes what looks like a standalone deployment, on a Slurm-allocated GPU node with no internet, for at most <b>' + BUDGET + '&nbsp;h</b>. It delivers one final patch: a code diff, with its artifacts.' },
-      { name: 'Check', dur: 4.8, cap: 'The validity checkers compare the delivery with the baseline. <b>Same work:</b> no launch-flag or environment change, and a request-bound run serves the baseline’s request count within 5%. <b>Same outputs:</b> on 100 fixed prompts, the first 32 tokens match, with top-5 log-probabilities within 0.01.' },
-      { name: 'Score', dur: 5.8, cap: 'The GuideLLM scorer measures the validated patch once, on a separate single-tenant node. With Fig. 1’s example, a ' + EX.agent.toFixed(2) + '× patch against <i>R</i> = ' + EX.expert.toFixed(2) + '× scores (' + EX.agent.toFixed(2) + ' − 1) / (' + EX.expert.toFixed(2) + ' − 1) = <b>' + GAIN + '%</b> of the expert’s gain.' }
+      { name: 'Scan', dur: 5.2,
+        cap: 'Agents read all <b>' + UI.fmt(CORPUS.total) + '</b> merged PRs of vLLM and SGLang and keep only the performance PRs.',
+        sr: 'Agents go through the PRs of vLLM and SGLang and read all ' + UI.fmt(CORPUS.total) + ' merged ones (vLLM ' + UI.fmt(CORPUS.vllm) + ', SGLang ' + UI.fmt(CORPUS.sglang) + '), keeping the performance PRs: complete fixes that claim a measured speedup on serving work. Bug fixes and refactors are left out, and PRs that never merged are not counted.' },
+      { name: 'Segment', dur: 4.4,
+        cap: 'The kept PR splits into two commits: the <b>baseline</b> before the expert’s patch and the <b>reference</b> after it.',
+        sr: 'The kept PR becomes a pair of commits: the reference, the commit that landed with the expert’s patch, and the baseline, its parent from before the patch.' },
+      { name: 'Seal & parse', dur: 5.0,
+        cap: 'The PR’s problem and fix are <b>sealed</b>. Only its deployment setup is parsed: setup card, engine config <i>S</i>, workload <i>W</i>.',
+        sr: 'The PR’s problem statement and fix are sealed away. Only its deployment setup is parsed: a setup card with the environment lock, the engine configuration S and the GuideLLM workload W.' },
+      { name: 'Measure', dur: 5.6,
+        cap: 'GuideLLM measures both commits on the target GPUs and profiles the baseline; the expert’s speedup becomes <b><i>R</i></b>.',
+        sr: 'On the target GPUs, GuideLLM runs the same workload against both commits, and the baseline is profiled with the PyTorch profiler, nsys and py-spy. The expert’s measured speedup becomes the reference R (' + XR + '× in Fig. 1’s example).' },
+      { name: 'Playground', dur: 4.6,
+        cap: 'The PR becomes a <b>sealed playground</b>: configs and profiles for the agent, the expert’s fix locked in <code>oracle/</code>.',
+        sr: 'The PR is now a sealed playground: the agent will get the configs and profiles, while the expert’s fix, its commits and the sealed runs stay in oracle/. It joins the playgrounds built from other PRs and is selected for a run.' },
+      { name: 'Sandbox', dur: 5.6,
+        cap: 'On a Slurm-allocated GPU node, the agent has <b>' + BUDGET + '&nbsp;h</b> to deliver one patch: a code diff and its artifacts.',
+        sr: 'In the interaction sandbox the agent optimizes what looks like a standalone deployment, on a Slurm-allocated GPU node with no internet, for at most ' + BUDGET + ' h. It delivers one final patch: a code diff, with its artifacts.' },
+      { name: 'Check', dur: 4.8,
+        cap: 'The validity checkers confirm <b>same work</b> (request count within 5%) and <b>same outputs</b> (first 32 tokens, log-probs within 0.01).',
+        sr: 'The validity checkers compare the delivery with the baseline. Same work: no launch-flag or environment change, and a request-bound run serves the baseline’s request count within 5%. Same outputs: on 100 fixed prompts, the first 32 tokens match, with top-5 log-probabilities within 0.01.' },
+      { name: 'Score', dur: 5.8,
+        cap: 'The scorer measures the patch once: in Fig. 1’s example, ' + X1 + '× against <i>R</i>&nbsp;=&nbsp;' + XR + '× is <b>' + GAIN + '%</b> of the expert’s gain.',
+        sr: 'The GuideLLM scorer measures the validated patch once, on a separate single-tenant node. With Fig. 1’s example, a ' + X1 + '× patch against R = ' + XR + '× scores (' + X1 + ' − 1) / (' + XR + ' − 1) = ' + GAIN + '% of the expert’s gain.' }
     ];
     var BANDS = [['Playground constructor', 0, 4], ['Playgrounds', 4, 5], ['Evaluation environment', 5, 8]];
-    var HOLD = 4.6, DIP = 0.55;                       /* hold the finished figure, then dip and start over */
-    var START = [], END = 0;
-    BEATS.forEach(function (b) { START.push(END); END += b.dur; });
+    /* each beat's last frame rests a moment before the next begins; the finished figure holds, then dips and starts over */
+    var REST = .9, HOLD = 4.6, DIP = 0.55;
+    var START = [], SPAN = [], END = 0;
+    BEATS.forEach(function (b, i) { START.push(END); SPAN.push(b.dur + (i < BEATS.length - 1 ? REST : 0)); END += SPAN[i]; });
     var TOTAL = END + HOLD;
     /* the blocks each beat is about, ringed on wide screens; narrow screens show only a beat's scene, its input first */
     var SCENE = [['scan'], ['commits'], ['seal', 'files'], ['measure'], ['play'], ['sandbox', 'diff'], ['valid'], ['scorer', 'gain']];
-    var SCENE_N = [['scan'], ['commits'], ['seal', 'files'], ['files', 'measure'], ['play'], ['sandbox', 'diff'], ['diff', 'valid'], ['scorer', 'gain']];
+    var SCENE_N = [['scan'], ['commits', 'seal'], ['seal', 'files'], ['files', 'measure'], ['play'], ['sandbox', 'diff'], ['diff', 'valid'], ['scorer', 'gain']];
 
     /* ---------------------------------------------------------------- the figure's content */
     /* the Scanning screenshot's rows (one row, half hidden behind the figure's label, is left out); m: merged */
@@ -70,8 +89,8 @@
     /* the three parsed files (App. A item layout); values are drawn as texture, words only where the figure prints them */
     var FILES = [
       { cap: 'Setupcard &amp; Envlock', fn: 'setupcard.md', lines: [['model:', .82], ['hardware:', .64], ['workload:', .9]], foot: ['env.yaml', 'venv.txt'] },
-      { cap: 'Engine config <i>S</i>', fn: 'vllm-config.yaml', lines: [['model:', .78], ['dtype:', .4], ['seed:', .3], ['max-num-seqs:', .3]], foot: ['launch flags'] },
-      { cap: 'GuideLLM config <i>W</i>', fn: 'scenario.json', lines: [['"data":', 'synthetic_text'], ['"backend":', .6], ['"profile":', 'concurrent'], ['"warmup":', .4]], foot: ['for all runs'] }
+      { cap: 'Engine config&nbsp;<i>S</i>', fn: 'vllm-config.yaml', lines: [['model:', .78], ['dtype:', .4], ['seed:', .3], ['max-num-seqs:', .3]], foot: ['launch flags'] },
+      { cap: 'GuideLLM config&nbsp;<i>W</i>', fn: 'scenario.json', lines: [['"data":', 'synthetic_text'], ['"backend":', .6], ['"profile":', 'concurrent'], ['"warmup":', .4]], foot: ['for all runs'] }
     ];
     var SETUPS = [['A', 'vLLM + Llama', 'request lengths'], ['B', 'SGLang + Qwen', 'bursty arrivals'], ['D', 'SGLang + Mamba', 'long-context requests']];
 
@@ -121,7 +140,8 @@
       R.count = E('b', { text: '0' });
       R.rows = [];
       R.prs = E('ul', { class: 'dp-prs' }, PRS.map(function (p) {
-        var why = p.keep ? null : E('span', { class: 'dp-why', text: p.why });
+        /* each row's verdict sits at the end of its meta line: why it is skipped, or the black tag of the kept PR */
+        var why = E('span', { class: 'dp-why' + (p.keep ? ' is-keep' : ''), text: p.keep ? 'performance PR' : p.why });
         var li = E('li', { class: 'dp-pr' + (p.keep ? ' is-keep' : '') }, [
           prIcon(p.m),
           E('div', { class: 'dp-pr-b' }, [
@@ -130,7 +150,7 @@
               .concat(p.labs.map(function (l) { return E('span', { class: 'dp-lab is-' + l[1], text: l[0] }); })).concat([why]))
           ])
         ]);
-        if (p.keep) li.appendChild(R.pick = E('span', { class: 'dp-pick' }, [E('span', { class: 'dp-pick-k', text: 'Performance PR' })]));
+        if (p.keep) li.appendChild(E('span', { class: 'dp-pick' }));
         R.rows.push({ li: li, keep: !!p.keep });
         return li;
       }));
@@ -182,7 +202,7 @@
           bar(.94), bar(.86), bar(.9), bar(.78), bar(.92), bar(.55)
         ]),
         R.seal,
-        E('figcaption', { class: 'dp-cap-pf', text: 'Problem & Fix' })
+        E('figcaption', { text: 'Problem & Fix' })
       ]);
       R.dsLines = [bar(.92, 'is-hl'), bar(.8, 'is-hl'), bar(.86, 'is-hl'), bar(.7), bar(.88)];
       R.ds = E('figure', { class: 'dp-doc dp-doc-ds' }, [
@@ -200,8 +220,9 @@
       R.fileLines = []; R.files = [];
       var cards = FILES.map(function (f) {
         var lines = f.lines.map(function (l) {
-          var v = typeof l[1] === 'string' ? E('span', { class: 'dp-fv', text: '"' + l[1] + '"' }) : bar(l[1], 'dp-fb');
-          var ln = E('p', { class: 'dp-ln' }, [E('span', { class: 'dp-fk', text: l[0] }), v]);
+          /* a word value has a texture twin, shown instead when the card is too narrow for the whole word */
+          var v = typeof l[1] === 'string' ? [E('span', { class: 'dp-fv', text: '"' + l[1] + '"' }), bar(.62, 'dp-fb dp-fv-b')] : [bar(l[1], 'dp-fb')];
+          var ln = E('p', { class: 'dp-ln' }, [E('span', { class: 'dp-fk', text: l[0] })].concat(v));
           R.fileLines.push(ln);
           return ln;
         });
@@ -218,7 +239,8 @@
     /* ---------------------------------------------------------------- 4. Measuring & Profiling */
     (function () {
       R.raceB = E('i'); R.raceR = E('i');
-      R.marks = [img('dp-nsys.png', 'dp-mk', 'Nsight Systems'), img('dp-torch.png', 'dp-mk', 'PyTorch profiler'), img('dp-python.png', 'dp-mk', 'py-spy')];
+      /* the figure's order, left to right: Python (py-spy), PyTorch (its profiler), the gauge (Nsight Systems) */
+      R.marks = [img('dp-python.png', 'dp-mk', 'py-spy'), img('dp-torch.png', 'dp-mk', 'PyTorch profiler'), img('dp-nsys.png', 'dp-mk', 'Nsight Systems')];
       R.gpuM = gpuSvg('dp-gpu-m');
       R.gl = E('div', { class: 'dp-gl' }, [
         img('dp-guidellm.png', 'dp-gl-word', 'GuideLLM'),
@@ -239,12 +261,12 @@
 
     /* ---------------------------------------------------------------- 5. Playgrounds */
     (function () {
-      function card(s) { return E('li', { class: 'dp-pg' }, [E('b', { html: 'Setup <em>' + s[0] + '</em>: ' + s[1] }), E('span', { text: s[2] })]); }
+      function card(s) { return E('li', { class: 'dp-pg' }, [E('b', { html: 'Setup <em>' + s[0] + '</em>: <span class="dp-nw">' + s[1] + '</span>' }), E('span', { class: 'dp-pg-w', text: s[2] })]); }
       R.items = [E('code', { text: 'configs/' }), E('code', { text: 'profile/' }), E('code', { class: 'is-lock' }, [lockSvg(), 'oracle/'])];
       R.pgA = E('div', { class: 'dp-pg dp-pg-a' }, [
         E('span', { class: 'dp-pg-slot', text: 'next playground' }),
         E('div', { class: 'dp-pg-in' }, [
-          E('b', { html: 'Setup <em>C</em>: vLLM + MoE' }), E('span', { text: 'multi-modal workload' }),
+          E('b', { html: 'Setup <em>C</em>: vLLM + MoE' }), E('span', { class: 'dp-pg-w', text: 'multi-modal workload' }),
           E('span', { class: 'dp-pg-items' }, R.items)
         ]),
         E('span', { class: 'dp-pg-sel', text: 'selected' })
@@ -290,14 +312,13 @@
       function check(name, detail) {
         return E('li', { class: 'dp-v' }, [E('span', { class: 'dp-v-ic' }, [checkSvg()]), E('b', { text: name }), E('span', { text: detail })]);
       }
-      R.checks = [check('Same work', 'no flag or env change; requests within 5%'), check('Same outputs', 'first 32 tokens; top-5 log-probs within 0.01')];
+      R.checks = [check('Same work', 'no flag or env change; requests within 5%'), check('Same outputs', 'first 32 tokens; top\u20115 log-probs within 0.01')];
       R.valid = E('div', { class: 'dp-valid' }, [E('b', { class: 'dp-valid-h', text: 'Validity Checkers' }), E('ul', null, R.checks), E('span', { class: 'dp-pass', text: 'valid' })]);
       B.valid = E('div', { class: 'dp-blk dp-vb' }, [narrowTitle('Validity checkers'), R.valid]);
 
       R.sv = E('span', { class: 'dp-sc-v', text: '—' });
-      R.gpuS = gpuSvg('dp-gpu-m');
       R.sc = E('div', { class: 'dp-sc' }, [img('dp-guidellm.png', 'dp-gl-word', 'GuideLLM'), E('b', { text: 'Scorer' }),
-        E('span', { class: 'dp-sc-r' }, [E('small', { text: 'e.g.' }), R.sv]), R.gpuS]);
+        E('span', { class: 'dp-sc-r' }, [E('small', { text: 'e.g.' }), R.sv])]);
       B.scorer = E('div', { class: 'dp-blk dp-scb' }, [R.sc]);
 
       R.gv = E('span', { class: 'dp-ng-v', text: '—' });
@@ -349,7 +370,7 @@
         pauseBtn
       ]),
       rail, caps, stage,
-      E('ol', { class: 'sr-only' }, BEATS.map(function (b) { var li = E('li', { html: b.cap }); return li; }))
+      E('ol', { class: 'sr-only' }, BEATS.map(function (b) { return E('li', { text: b.sr }); }))
     ]);
 
     /* ---------------------------------------------------------------- layout: the list's rows and the figure's arrows */
@@ -465,6 +486,7 @@
        while the list is laid out; on narrow screens it is hidden outside its beat) */
     function measureList() {
       if (!R.view.clientHeight) return;
+      R.rows.forEach(function (r) { r.li.style.setProperty('--why', r.li.querySelector('.dp-why').offsetWidth + 'px'); });
       G.rowTop = R.rows.map(function (r, i) { r.i = i; return r.li.offsetTop; });
       G.rowH = R.rows[0].li.offsetHeight || 44;
       G.viewH = R.view.clientHeight;
@@ -494,16 +516,16 @@
     }
 
     /* below 900 px one beat's blocks show at a time: the stage keeps the tallest beat's height (measured per width) */
-    function sceneHeight(force) {
+    function sceneHeight() {
       var W = stage.clientWidth;
       if (still) { stage.style.minHeight = ''; G.sceneW = 0; return; }
-      if (!W || (W === G.sceneW && !force)) return;
+      if (!W || W === G.sceneW) return;
       G.sceneW = W;
       stage.style.minHeight = '';
       var max = 0;
       SCENE_N.forEach(function (sc, i) {
         Object.keys(B).forEach(function (key) { var a = sc.indexOf(key) >= 0; B[key].classList.toggle('is-on', a); B[key].classList.toggle('is-2nd', a && sc.indexOf(key) > 0); });
-        max = Math.max(max, stage.offsetHeight);
+        max = Math.max(max, Math.ceil(stage.getBoundingClientRect().height));
         if (!i) measureList();
       });
       Object.keys(B).forEach(function (key) { B[key]['_c_is-on'] = undefined; B[key]['_c_is-2nd'] = undefined; });
@@ -527,6 +549,7 @@
       var off = clamp(cy + G.rowH / 2 - G.viewH * .56, 0, G.maxOff);
       if (p >= .995) off = G.maxOff;
       tf(R.prs, 'translateY(' + (-off).toFixed(1) + 'px)');
+      on(R.view, 'is-scrolled', off > 1);
       tf(R.cur, 'translateY(' + cy.toFixed(1) + 'px)');
       op(R.cur, p > 0 && p < .9 ? 1 : 0);
       R.rows.forEach(function (r, j) { on(r.li, r.keep ? 'is-kept' : 'is-skip', r.keep ? p >= .82 : c >= j + .45); });
@@ -580,8 +603,8 @@
       p = P[7];
       on(R.sc, 'is-run', p >= .2 && p < .56); on(R.sc, 'has-v', p >= .3);
       tx(R.sv, p < .3 ? '—' : (1 + (EX.agent - 1) * eo(seg(p, .3, .54))).toFixed(2) + '×');
-      tx(R.gv, p < .66 ? '—' : Math.round(GAIN * eo(seg(p, .66, .92))) + '%');
-      on(R.gf, 'is-on', p >= .72);
+      tx(R.gv, p < .66 ? '—' : Math.round(GAIN * eo(seg(p, .66, .88))) + '%');
+      on(R.gf, 'is-on', p >= .88);
 
       /* the arrows draw as their beat reaches them; a dot rides the head */
       if (!narrow) WIRES.forEach(function (w) {
@@ -605,14 +628,14 @@
         on(s, 'is-done', done || (focus >= 0 ? j < focus : j < k || t >= END));
         on(s, 'is-cur', isCur);
         if (s._cur !== isCur) { s._cur = isCur; if (isCur) s.setAttribute('aria-current', 'step'); else s.removeAttribute('aria-current'); }
-        sx(fills[j], isCur ? (still || focus >= 0 ? 1 : P[j]) : 0);
+        sx(fills[j], isCur ? (still || focus >= 0 ? 1 : clamp((t - START[j]) / SPAN[j])) : 0);
       });
       caps.childNodes.forEach(function (cp, j) { on(cp, 'is-on', done ? j === BEATS.length - 1 : j === cur); });
       bandEls.forEach(function (el, j) { on(el, 'is-on', !done && cur >= BANDS[j][1] && cur < BANDS[j][2]); });
       var act = done ? [] : SCENE[cur], actN = done ? [] : SCENE_N[cur];
       Object.keys(B).forEach(function (key) {
         var a = act.indexOf(key) >= 0, n = actN.indexOf(key);
-        on(B[key], 'is-act', a && !narrow);
+        on(B[key], 'is-act', a && (!narrow || still && focus >= 0));
         on(B[key], 'is-on', narrow && (still || n >= 0));
         on(B[key], 'is-2nd', narrow && !still && n > 0);
       });
@@ -642,8 +665,8 @@
     }
     function jump(i) {
       if (still) { focus = focus === i ? -1 : i; render(END); return; }
-      focus = -1;
-      t = userPaused ? START[i] + BEATS[i].dur * .999 : START[i] + .001;
+      focus = -1; loops = 0;
+      t = userPaused ? START[i] + SPAN[i] - (i < BEATS.length - 1 ? .01 : 0) : START[i] + .001;
       if (!started) { started = true; }
       render(t); sync();
     }
@@ -651,10 +674,11 @@
       userPaused = !userPaused;
       pauseBtn.classList.toggle('is-paused', userPaused);
       pauseBtn.setAttribute('aria-label', userPaused ? 'Play animation' : 'Pause animation');
-      if (userPaused && t < END) { render(t); }
+      if (userPaused) { if (t > TOTAL - DIP) t = TOTAL - DIP; else if (loops && t < DIP) t = DIP; render(t); }
       sync();
     });
     rail.addEventListener('keydown', function (e) {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
       var i = steps.indexOf(document.activeElement);
       if (i < 0) return;
       var j = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? steps.length - 1 : -1;
@@ -666,7 +690,8 @@
       G.sceneW = 0;
       pauseBtn.hidden = still;
       root.classList.toggle('is-static', still);
-      if (still) { focus = -1; render(END); }
+      focus = -1;
+      if (still) render(END);
     }
     function setNarrow() {
       narrow = narrowQ.matches;

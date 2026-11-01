@@ -61,7 +61,7 @@
   grid-area: 1 / 1; margin: 0; font-size: 15px; line-height: 1.55; color: var(--ink-2); text-wrap: pretty;
   opacity: 0; visibility: hidden; transition: opacity .3s var(--ease), visibility 0s linear .3s;
 }
-#dojo .dp-cap.is-on { opacity: 1; visibility: visible; transition: opacity .45s var(--ease) .05s, visibility 0s; }
+#dojo .dp-cap.is-on { opacity: 1; visibility: visible; transition: opacity .4s var(--ease) .3s, visibility 0s; }   /* after the old one has gone */
 #dojo .dp-cap b { color: var(--ink); font-weight: 620; }
 #dojo .dp-cap code { font-size: .84em; }
 #dojo .dp-cap-k { margin-right: 10px; font-family: var(--mono); font-size: 11.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--blue-ink); white-space: nowrap; }
@@ -90,7 +90,7 @@
 #dojo .dp-ct3 { grid-column: 3; }
 #dojo .dp-scan { grid-column: 1; grid-row: 2; display: flex; flex-direction: column; }
 #dojo .dp-segp { grid-column: 2; grid-row: 2 / 4; display: flex; flex-direction: column; gap: 12px; padding: 10px 12px; border-radius: 18px; background: var(--bg); }
-#dojo .dp-measc { grid-column: 3; grid-row: 2 / 4; display: flex; flex-direction: column; gap: 14px; }
+#dojo .dp-measc { grid-column: 3; grid-row: 2 / 4; display: flex; flex-direction: column; gap: 26px; }
 #dojo .dp-filesp { flex: 1; display: flex; padding: 10px 10px 8px; border-radius: 18px; background: var(--bg); }
 #dojo .dp-filesb { flex: 1; display: flex; }
 #dojo .dp-bn { grid-column: 1; grid-row: 3; align-self: end; margin: 0; padding-left: 4px; font-size: 17px; font-weight: 650; font-style: italic; letter-spacing: -.01em; color: var(--ink-3); white-space: nowrap; }
@@ -109,15 +109,20 @@
 #dojo .dp-gh-n { margin: 0; padding: 6px 12px 7px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #dojo .dp-gh-n b { color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }
 #dojo .dp-gh-view { position: relative; flex: 1; min-height: 188px; overflow: hidden; contain: size; }   /* the list never sets the band's height */
+#dojo .dp-gh-view.is-scrolled { -webkit-mask-image: linear-gradient(transparent, #000 22px); mask-image: linear-gradient(transparent, #000 22px); }
 #dojo .dp-prs { position: relative; margin: 0; padding: 0; list-style: none; }
-#dojo .dp-pr { position: relative; z-index: 1; display: flex; align-items: flex-start; gap: 8px; height: 47px; padding: 7px 12px 0; border-bottom: 1px solid var(--line); }
+#dojo .dp-pr { position: relative; z-index: 1; display: flex; align-items: flex-start; gap: 8px; height: 47px; padding: 5px 12px 0; border-bottom: 1px solid var(--line); }
 #dojo .dp-pr-ic { flex: none; width: 15px; height: 15px; margin-top: 1.5px; fill: none; stroke-width: 1.5; stroke-linecap: round; transition: opacity .3s; }
 #dojo .dp-pr-ic.is-m { stroke: var(--dp-merge); }
 #dojo .dp-pr-ic.is-c { stroke: var(--dp-close); }
 #dojo .dp-pr-b { flex: 1; min-width: 0; }
 #dojo .dp-pr-t { margin: 0; font-size: 12.5px; font-weight: 560; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity .3s; }
-#dojo .dp-pr-m { display: flex; align-items: center; gap: 5px; margin: 3px 0 0; font-size: 11px; color: var(--ink-3); white-space: nowrap; overflow: hidden; }
-#dojo .dp-pr-n { flex: none; transition: opacity .3s; }
+/* the meta line is one 17 px line (the verdict pill's height): labels that don't fit wrap onto a second line, which is hidden */
+#dojo .dp-pr-m {
+  position: relative; display: flex; flex-wrap: wrap; align-items: center; align-content: flex-start; gap: 6px 5px;
+  height: 17px; margin: 2px 0 0; padding-top: 1px; font-size: 11px; color: var(--ink-3); white-space: nowrap; overflow: hidden;
+}
+#dojo .dp-pr-n { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; transition: opacity .3s; }
 #dojo .dp-lab { flex: none; padding: 0 6px; border-radius: 999px; font-size: 11px; font-weight: 600; line-height: 15px; color: #fff; background: var(--lc, #888); transition: opacity .3s; }
 #dojo .dp-lab.is-red { --lc: #D73A4A; }
 #dojo .dp-lab.is-olive { --lc: #A08A1E; }
@@ -127,14 +132,15 @@
 #dojo .dp-lab.is-brown { --lc: #6F4A3A; }
 #dojo .dp-lab.is-blue { --lc: #1F7FE5; }
 #dojo .dp-lab.is-violet { --lc: #A24BE0; }
-#dojo .dp-pr-m { position: relative; }
 #dojo .dp-why {
   position: absolute; right: 0; top: 0; padding: 0 7px; border: 1px dashed var(--ink-4); border-radius: 999px; background: var(--bg);
   font-family: var(--mono); font-size: 11px; line-height: 15px; color: var(--ink-3); opacity: 0; transition: opacity .3s;
 }
 #dojo .dp-pr.is-skip .dp-pr-t, #dojo .dp-pr.is-skip .dp-pr-n, #dojo .dp-pr.is-skip .dp-pr-ic { opacity: .35; }
-#dojo .dp-pr.is-skip .dp-lab { opacity: 0; }
-#dojo .dp-pr.is-skip .dp-why { opacity: 1; }
+#dojo .dp-pr.is-skip .dp-lab, #dojo .dp-pr.is-kept .dp-lab { opacity: 0; }
+#dojo .dp-pr.is-skip .dp-why, #dojo .dp-pr.is-kept .dp-why { opacity: 1; }
+#dojo .dp-pr.is-skip .dp-pr-m, #dojo .dp-pr.is-kept .dp-pr-m { padding-right: calc(var(--why, 0px) + 4px); }   /* --why: the pill's width, set by measureList() */
+#dojo .dp-why.is-keep { border: 1px solid var(--block); background: var(--block); color: var(--on-block); font-weight: 700; }
 #dojo .dp-why::before { content: ""; position: absolute; right: 100%; top: -1px; bottom: -1px; width: 18px; background: linear-gradient(90deg, transparent, var(--bg)); }
 #dojo .dp-cur { position: absolute; left: 0; right: 0; top: 0; z-index: 0; border-left: 3px solid var(--blue); background: color-mix(in srgb, var(--blue) 9%, transparent); pointer-events: none; opacity: 0; }
 #dojo .dp-pick {
@@ -142,10 +148,6 @@
   opacity: 0; transform: scale(1.05); transition: opacity .35s var(--ease), transform .55s var(--ease-out);
 }
 #dojo .dp-pr.is-kept .dp-pick { opacity: 1; transform: none; }
-#dojo .dp-pick-k {
-  position: absolute; right: 8px; top: -12px; padding: 1px 8px; border-radius: 999px; background: var(--block); color: var(--on-block);
-  font-family: var(--mono); font-size: 11px; font-weight: 700; line-height: 17px; white-space: nowrap;
-}
 
 /* 2. the PR's commits: baseline = the parent, reference = the landed commit */
 #dojo .dp-cm { font-size: 12px; container-type: inline-size; }
@@ -164,15 +166,16 @@
 #dojo .dp-sha { color: var(--ink); font-weight: 600; transition: box-shadow .35s var(--ease); }
 #dojo .dp-sha.is-b.is-on { box-shadow: 0 0 0 2px var(--dp-gray); }
 #dojo .dp-sha.is-r.is-on { box-shadow: 0 0 0 2px var(--blue); }
-#dojo .dp-cm-pp { font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); white-space: nowrap; }
 #dojo .dp-ver { padding: 0 6px; border: 1px solid color-mix(in srgb, var(--aqua) 70%, transparent); border-radius: 999px; font-size: 11px; line-height: 15px; color: var(--aqua-ink); }
 #dojo .dp-arm { font-size: 12px; font-weight: 700; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transition: opacity .4s var(--ease); }
 #dojo .dp-arm-p { font-weight: 600; }
 #dojo .dp-arm.is-b { color: var(--dp-gray); }
 #dojo .dp-arm.is-r { color: var(--blue-ink); }
-#dojo .dp-cm-row.is-on .dp-arm { opacity: 1; }
-#dojo .dp-cm-row.is-on .dp-cm-dim { opacity: 0; }
+/* the screenshot's text fades out before the figure's label fades in over it, so the two never show at once */
+#dojo .dp-cm-row.is-on .dp-arm { opacity: 1; transition-delay: .25s; }
+#dojo .dp-cm-row.is-on .dp-cm-dim { opacity: 0; transition-duration: .2s; }
 @container (max-width: 400px) { #dojo .dp-ver { display: none; } }
+@container (max-width: 300px) { #dojo .dp-cm-tabs > :last-child { display: none; } }
 @container (max-width: 342px) { #dojo .dp-arm-c { display: none; } }
 @container (max-width: 268px) { #dojo .dp-arm-p { display: none; } }
 
@@ -186,7 +189,9 @@
 }
 #dojo .dp-doc-t { margin: 0; font-size: 12px; font-weight: 600; line-height: 1.3; color: var(--ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 #dojo .dp-doc-m { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 11px; color: var(--ink-3); white-space: nowrap; overflow: hidden; }
+#dojo .dp-doc-m > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 #dojo .dp-merged { flex: none; padding: 0 7px; border-radius: 999px; background: var(--dp-merge); color: #fff; font-size: 11px; font-weight: 600; line-height: 16px; }
+:root[data-theme="dark"] #dojo .dp-merged { background: #8957E5; }   /* white text needs the deeper violet in dark mode */
 #dojo .dp-doc-h { margin: 1px 0 0; font-size: 12px; font-weight: 650; line-height: 1.3; color: var(--ink); }
 #dojo .dp-tl { display: block; flex: none; width: var(--w); height: 5px; border-radius: 3px; background: var(--dp-tex); transition: background-color .35s var(--ease); }
 #dojo .dp-doc-pf.is-sealed .dp-doc-b { filter: blur(1.4px); opacity: .45; }
@@ -214,12 +219,16 @@
 }
 #dojo .dp-file.is-on .dp-code { border-color: var(--line-2); }
 #dojo .dp-fn { margin: 0 0 2px; font-weight: 700; color: var(--ink-2); white-space: nowrap; overflow: hidden; }
-#dojo .dp-ln { display: flex; align-items: center; gap: 5px; min-width: 0; margin: 0; white-space: nowrap; overflow: hidden; }
-#dojo .dp-fk { flex: none; color: var(--ink-4); transition: color .3s var(--ease); }
-#dojo .dp-fv { flex: none; color: var(--ink-4); transition: color .3s var(--ease); }
-#dojo .dp-ln .dp-tl { width: auto; flex: 0 1 var(--w); min-width: 8px; background: var(--dp-skel); }
+/* one line per key: a value that doesn't fit wraps onto a hidden second line; a key alone too wide ends with an ellipsis */
+#dojo .dp-ln { display: flex; flex-wrap: wrap; align-items: center; align-content: flex-start; gap: 6px 5px; height: 1.45em; min-width: 0; margin: 0; white-space: nowrap; overflow: hidden; }
+#dojo .dp-fk { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--ink-4); transition: color .3s var(--ease); }
+#dojo .dp-fv { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--ink-4); transition: color .3s var(--ease); }
+#dojo .dp-ln .dp-tl { width: auto; flex: 1 1 8px; min-width: 8px; max-width: var(--w); background: var(--dp-skel); }
 /* too narrow for the file names: the captions under the cards say which file is which */
 @container (max-width: 352px) { #dojo .dp-fn, #dojo .dp-ff { display: none; } }
+/* too narrow for scenario.json's two words ("data": "synthetic_text"): they are drawn as texture like the other values */
+#dojo .dp-ln .dp-fv-b { display: none; }
+@container (max-width: 579px) { #dojo .dp-ln .dp-fv { display: none; } #dojo .dp-ln .dp-fv-b { display: block; } }
 #dojo .dp-ln.is-on .dp-fk { color: var(--blue-ink); }
 #dojo .dp-ln.is-on .dp-fv { color: var(--aqua-ink); }
 #dojo .dp-ln.is-on .dp-tl { background: color-mix(in srgb, var(--aqua) 55%, transparent); }
@@ -274,10 +283,15 @@
 #dojo .dp-pg-row { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; margin: 0; padding: 0; list-style: none; }
 #dojo .dp-pg { flex: 1 1 0; display: flex; flex-direction: column; min-width: 0; padding: 8px 11px; border: 1.5px solid var(--line-2); border-radius: 12px; background: var(--bg); }
 #dojo .dp-pg b { font-size: 12.5px; font-weight: 650; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#dojo .dp-pg b em { font-style: normal; color: var(--blue); }
-#dojo .dp-pg span { font-size: 12px; font-style: italic; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#dojo .dp-pg b em { font-style: normal; color: var(--blue-ink); }
+#dojo .dp-pg-w { font-size: 12px; font-style: italic; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #dojo .dp-pg-more { flex: none; font-size: 18px; font-weight: 700; letter-spacing: 1px; color: var(--ink); }
-@container (max-width: 640px) { #dojo .dp-pg-row > .dp-pg:nth-child(3) { display: none; } }
+#dojo .dp-nw { white-space: nowrap; }
+@container (max-width: 640px) {
+  #dojo .dp-pg-row { gap: 8px; align-items: stretch; }
+  #dojo .dp-pg-row > .dp-pg { padding: 7px 9px; }
+  #dojo .dp-pg-row .dp-pg b { white-space: normal; }
+}
 #dojo .dp-pg-a {
   grid-column: 3; align-self: end; position: relative; min-height: 76px; justify-content: center; border-color: transparent; background: transparent;
   transition: border-color .4s var(--ease), background-color .4s var(--ease), box-shadow .4s var(--ease);
@@ -324,7 +338,7 @@
 #dojo .dp-gpu-n.is-on { fill: var(--violet); }
 #dojo .dp-ag-frame { position: absolute; left: 1.5px; top: 1.5px; width: calc(100% - 3px); height: calc(100% - 3px); overflow: visible; fill: none; stroke: var(--blue); stroke-width: 3; stroke-dasharray: 10 7; }
 #dojo .dp-agent.is-work .dp-ag-frame { animation: dp-march .9s linear infinite; }
-#dojo .is-still .dp-agent.is-work .dp-ag-frame, #dojo .is-still .is-run > .dp-gpu-m { animation-play-state: paused; }
+#dojo .is-still .dp-agent.is-work .dp-ag-frame, #dojo .is-still .is-run > .dp-gpu-m, #dojo .is-still .dp-v.is-run .dp-v-ic { animation-play-state: paused; }
 @keyframes dp-march { to { stroke-dashoffset: -17; } }
 #dojo .dp-ag-head { display: block; width: 44px; height: 44px; transition: transform .5s var(--ease); }
 #dojo .dp-agent.is-work .dp-ag-head { transform: scale(1.06); }
@@ -366,7 +380,7 @@
 #dojo .dp-v.is-ok .dp-v-ic { background: var(--aqua); box-shadow: none; animation: none; }
 #dojo .dp-ck { width: 12px; height: 12px; fill: none; stroke: #fff; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 14; stroke-dashoffset: 14; transition: stroke-dashoffset .35s var(--ease) .08s; }
 #dojo .dp-v.is-ok .dp-ck { stroke-dashoffset: 0; }
-#dojo .dp-pass { align-self: center; padding: 0 9px; border-radius: 999px; background: var(--aqua-bg); color: var(--aqua-ink); font-family: var(--mono); font-size: 11px; font-weight: 700; line-height: 17px; opacity: 0; transition: opacity .35s var(--ease); }
+#dojo .dp-pass { align-self: center; padding: 0 9px; border-radius: 999px; background: var(--aqua-bg); color: #0B6E4B; font-family: var(--mono); font-size: 11px; font-weight: 700; line-height: 17px; opacity: 0; transition: opacity .35s var(--ease); }
 #dojo .dp-valid.is-ok .dp-pass { opacity: 1; }
 
 /* the scorer and the normalized gain */
@@ -401,12 +415,12 @@
 @media (max-width: 1080px) {
   #dojo .dp-band { column-gap: 26px; padding-left: 12px; padding-right: 24px; }
   #dojo .dp-ct { font-size: 14.5px; }
+  #dojo .dp-rail { grid-template-columns: repeat(8, auto); }   /* columns sized by their names, so none is cut */
   #dojo .dp-rk { margin: 0 3px; letter-spacing: .06em; }
-  #dojo .dp-step { gap: 6px; padding-left: 4px; padding-right: 4px; font-size: 12.5px; }
+  #dojo .dp-step { gap: 5px; padding-left: 3px; padding-right: 3px; font-size: 12.5px; }
   #dojo .dp-pg-k b { font-size: 16.5px; }
   #dojo .dp-b3l { column-gap: 24px; }
   #dojo .dp-ms { column-gap: 24px; }
-  #dojo .dp-gh-pr { display: none; }
   #dojo .dp-ng b { font-size: 12px; }
   #dojo .dp-ng-v { font-size: 26px; }
   #dojo .dp-df figcaption { font-size: 12px; white-space: normal; line-height: 1.2; }
@@ -415,10 +429,13 @@
   #dojo .dp-valid-h { font-size: 13px; }
 }
 
+/* the dense three-band layout has no room for "pull requests"; the single column below 900 px has */
+@media (min-width: 901px) and (max-width: 1080px) { #dojo .dp-gh-pr { display: none; } }
+
 /* ------------------------------------------------------------------ narrow: one beat's blocks at a time */
 @media (max-width: 900px) {
   #dojo .dp-rail { column-gap: 2px; }
-  #dojo .dp-stage { display: flex; flex-direction: column; justify-content: center; gap: 0; }
+  #dojo .dp-stage { display: flex; flex-direction: column; justify-content: flex-start; gap: 0; }
   #dojo .dp-band:not(.dp-blk), #dojo .dp-segp, #dojo .dp-measc, #dojo .dp-filesp, #dojo .dp-b3l { display: contents; }
   #dojo .dp-ct, #dojo .dp-bn, #dojo .dp-wires, #dojo .dp-sb-k { display: none; }
   #dojo .dp-blk { flex: none; display: block; padding: 12px 14px 14px; border-radius: 18px; background: var(--panel); }
@@ -426,6 +443,7 @@
   #dojo .dp-root:not(.is-static) .dp-blk.is-on { animation: dp-in .5s var(--ease-out) both; }
   #dojo .dp-root:not(.is-static) .dp-blk.is-2nd { animation-delay: .12s; }
   #dojo .dp-blk::after { display: none; }
+  #dojo .is-static .dp-blk.is-act::after { display: block; }   /* a step tapped in the still frame rings its block */
   #dojo .dp-blk.is-2nd { margin-top: 30px; }
   /* the arrow between the two blocks of one beat */
   #dojo .dp-blk.is-2nd::before {
@@ -453,7 +471,7 @@
   #dojo .dp-pg-l { display: block; }
   #dojo .dp-pg-k { margin: 0 0 10px; white-space: normal; }
   #dojo .dp-pg-k b { font-size: 14px; font-style: normal; color: var(--ink); }
-  #dojo .dp-pg-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  #dojo .dp-pg-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
   #dojo .dp-pg-row > .dp-pg:nth-child(3) { display: flex; }
   #dojo .dp-pg-more { display: none; }
   #dojo .dp-pg-a { margin-top: 18px; }
@@ -471,7 +489,6 @@
   #dojo .dp-sn { display: none; }
   #dojo .dp-sp { left: 6px; right: 6px; }
   #dojo .dp-cap { font-size: 14.5px; }
-  #dojo .dp-pg-row { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 560px) {
   #dojo .dp-title { font-size: 14px; gap: 10px; }

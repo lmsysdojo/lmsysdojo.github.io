@@ -32,7 +32,8 @@
     watch: function (el, cb, margin) {
       if (!el) return;
       if (!('IntersectionObserver' in window)) { cb(true); return; }
-      new IntersectionObserver(function (es) { cb(es[0].isIntersecting); }, { rootMargin: margin || '120px 0px' }).observe(el);
+      /* entries can arrive batched: the newest one is the current state */
+      new IntersectionObserver(function (es) { cb(es[es.length - 1].isIntersecting); }, { rootMargin: margin || '120px 0px' }).observe(el);
     },
     /* scroll progress of a tall track through the viewport: 0 when its top reaches the pin line, 1 when its bottom
        reaches the bottom of the viewport. Pass the track element; pin line defaults to just below the nav. */
