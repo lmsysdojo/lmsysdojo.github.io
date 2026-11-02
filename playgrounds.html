@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Playgrounds · LMSysDojo</title>
+<meta name="description" content="Browse the 900 LMSysDojo playgrounds: merged vLLM and SGLang performance PRs rebuilt as sealed serving setups and measured on H100s before and after the expert's patch.">
+<meta property="og:title" content="LMSysDojo playgrounds">
+<meta property="og:description" content="900 merged vLLM and SGLang performance PRs, each rebuilt as a playground and measured before and after the expert's patch.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://lmsysdojo.github.io/playgrounds.html">
+<meta property="og:image" content="https://lmsysdojo.github.io/assets/img/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lmsysdojo.github.io/assets/img/og.png">
+<link rel="canonical" href="https://lmsysdojo.github.io/playgrounds.html">
+<!-- pre-release: reachable by link but kept out of search results; delete this line at launch -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23007FFF'/%3E%3Crect x='6' y='9.5' width='12' height='4' rx='2' fill='%23fff'/%3E%3Crect x='21' y='9.5' width='5' height='4' rx='2' fill='%23fff' opacity='.55'/%3E%3Crect x='6' y='18.5' width='6' height='4' rx='2' fill='%23fff' opacity='.55'/%3E%3Crect x='15' y='18.5' width='11' height='4' rx='2' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:wght@400..700&family=Google+Sans+Flex:opsz,wght@6..144,400..700&display=swap">
+<script>(function(){try{var t=localStorage.getItem('lmsd-theme');if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content','#0B0D11');}}catch(e){}})();</script>
+<link rel="stylesheet" href="assets/css/base.css?v=20261102c">
+<link rel="stylesheet" href="assets/css/playgrounds.css?v=20261102c">
+</head>
+<body class="pg-page">
+<a class="skip" href="#main">Skip to content</a>
+
+<!-- ============================================================ nav (site.js: .scrolled, scroll-spy) -->
+<nav class="top" aria-label="Site">
+  <div class="row">
+    <div class="nav-left">
+      <a class="brand" href="index.html" aria-label="LMSysDojo overview">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#007FFF"/><rect x="6" y="9.5" width="12" height="4" rx="2" fill="#fff"/><rect x="21" y="9.5" width="5" height="4" rx="2" fill="#fff" opacity=".55"/><rect x="6" y="18.5" width="6" height="4" rx="2" fill="#fff" opacity=".55"/><rect x="15" y="18.5" width="11" height="4" rx="2" fill="#fff"/></svg>
+        <span>LMSys<b>Dojo</b></span>
+      </a>
+      <div class="nav-tabs" role="navigation" aria-label="Pages">
+        <a href="index.html">Overview</a>
+        <a href="playgrounds.html" aria-current="page">Playgrounds</a>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="#speedups">Speedups</a>
+      <a href="#list">List</a>
+    </div>
+    <div class="nav-tools">
+      <button class="icon-btn theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Dark mode" title="Dark mode">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7Z"/></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<main id="main" tabindex="-1">
+<!-- ============================================================ owner: assets/js/playgrounds.js, assets/css/playgrounds.css -->
+<header class="pg-head">
+  <div class="wrap">
+    <p class="eyebrow">LMSysDojo corpus</p>
+    <h1 class="pg-title">Playgrounds</h1>
+    <p class="lede">Each playground is one merged performance PR from vLLM or SGLang, rebuilt as a sealed serving setup and measured on H100s twice: with the engine as it was before the PR, and with the expert's patch. Browse all 900, or open one to see its setup and both measurements.</p>
+    <div class="stats pg-stats" data-mount="pg-stats">
+      <div class="stat"><div class="n">900</div><div class="l">playgrounds, from 39,411 merged PRs</div></div>
+      <div class="stat"><div class="n">100</div><div class="l">in the LMSysDojo-100 benchmark</div></div>
+    </div>
+  </div>
+</header>
+
+<section class="sec pg-sec" id="explore" aria-labelledby="explore-title">
+  <div class="wrap">
+    <h2 class="pg-h" id="explore-title">Every playground, measured</h2>
+    <p class="pg-sub">Each dot is one playground: how much faster the expert's patch made it on the metric its setup card declares. Most expert fixes gain a few percent, inside or just past the noise floor. LMSysDojo-100 was selected on the end-to-end (E2E) latency gain instead, so a few of its items sit inside the band on their declared metric.</p>
+    <div class="pg-bar" data-mount="pg-filters"></div>
+    <figure class="pg-fig" id="speedups" data-mount="pg-chart"><p class="cap">Loading the measurements…</p></figure>
+    <div class="pg-listwrap" id="list" data-mount="pg-list"><p class="cap">The playground list needs JavaScript; the data is <a href="assets/data/playgrounds.json">assets/data/playgrounds.json</a>.</p></div>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <div class="wrap row">
+    <span>LMSys<b style="color:var(--blue)">Dojo</b> · Dartmouth College · Rice University · Google</span>
+    <span><a href="index.html">Overview</a> · <a href="#top" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">Back to top ↑</a></span>
+  </div>
+</footer>
+
+<script src="assets/js/site.js?v=20261102c" defer></script>
+<script src="assets/js/playgrounds.js?v=20261102c" defer></script>
+</body>
+</html>

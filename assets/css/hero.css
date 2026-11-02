@@ -89,6 +89,9 @@
 }
 .hero-tldr b { color: var(--ink); font-weight: 620; font-variant-numeric: tabular-nums; }
 .hero-tldr em { font-style: italic; color: var(--ink); }
+/* the way to the Playgrounds tab, closing the summary */
+.hero-tldr-link { font-weight: 600; white-space: nowrap; text-decoration-color: transparent; transition: text-decoration-color .2s; }
+.hero-tldr-link:hover { text-decoration-color: currentColor; }
 
 /* scroll cue */
 .hero-scroll {

@@ -8,7 +8,8 @@ folder) or publish the folder as-is with GitHub Pages. No build step; the only e
 
 | Path | What it is |
 | --- | --- |
-| `index.html` | All page copy, tables, figures and captions. Every interactive piece mounts into a `data-mount="…"` element whose static content is the no-JavaScript fallback. |
+| `index.html` | The overview: all page copy, tables, figures and captions. Every interactive piece mounts into a `data-mount="…"` element whose static content is the no-JavaScript fallback. |
+| `playgrounds.html` | The Playgrounds tab: every corpus playground with its measurements. One filter bar scopes a strip of the expert's speedups and the list under it; a dialog shows one playground (setup, launch config, both measurements, or why its run errored) and is addressable as `playgrounds.html#<engine>/<item>`. |
 | `assets/css/base.css` | Design tokens (light and dark), type, layout, nav, rail, cards, tables, code, charts, reveal. |
 | `assets/js/site.js` | Theme toggle, nav and rail scroll-spy, smooth in-page links, reveal-on-scroll, count-ups, lightbox, BibTeX copy, and the `LMSDUI` helper API. |
 | `assets/js/charts.js` | `LMSDCharts.line / hbar / donut`: the shared SVG charts. |
@@ -24,6 +25,8 @@ folder) or publish the folder as-is with GitHub Pages. No build step; the only e
 | `assets/{js,css}/gap-glance.*` | 02 Agent: the "At a glance" figure as an animation (setups, parallel gap analysis, candidate mechanisms against the expert). |
 | `assets/{js,css}/rl.*` | 03 Training: signal comparison, the three-challenge loop animation (whole solver vs analysis RL, fixed vs elastic GPU fleet, synchronous vs asynchronous), throughput, RL results. |
 | `assets/{js,css}/gallery.*` | 04 Gallery: a walkthrough player for the paper's two end-to-end deliveries (SGLang 8940, vLLM 41868), the mechanism cards, failure modes. |
+| `assets/{js,css}/playgrounds.*` | The Playgrounds tab's script and styles. |
+| `assets/data/playgrounds.json`, `assets/data/pg/` | The playground list and one file per playground, generated from the sysdojo corpus by `asset/source/site-playgrounds.py`: setup card fields, launch config, and the latest numbers on file for both versions (the seal, else the latest run or benchmark report, scored as sysdojo's `build_track.py` scores a seal); for a run that left no numbers, its cause and reason (reviewed wording in `asset/source/site-playgrounds-errors.json`). Nothing sealed (problem, fix, diff, trace) and none of the tracker's free-text notes. Re-run the generator after a measurement push. |
 | `assets/img/fig`, `assets/img/chart` | Paper figures (WebP, 1200 and 2400 px) and the paper's own charts, opened by the "Paper figure ↗" buttons next to each interactive version. |
 | `assets/img/kit` | Logos and marks the animations reuse from the paper's figure sources (engine logos, model marks, analyzer head). |
 
@@ -46,3 +49,4 @@ folder) or publish the folder as-is with GitHub Pages. No build step; the only e
 
 - `?reveal=all` shows every reveal-on-scroll block at once (full-page screenshots).
 - The page honours `prefers-reduced-motion`: animations render their final state and the pinned story unpins.
+- Stylesheets and scripts are linked with a `?v=` date so a returning visitor never pairs new HTML with a cached old file; bump it in both pages when you change an asset. The Playgrounds data is fetched with `cache: 'no-cache'` (a cheap revalidation each visit).
